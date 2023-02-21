@@ -1,0 +1,33 @@
+name: PerturbSeq_CMV
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - matplotlib
+  - seaborn
+  - numpy
+  - scanpy
+  - scipy
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch-lightning
+  - cudatoolkit=11.7
+  - pytest
+  - pyarrow
+  - pre-commit
+  - scikit-learn
+  - tensorboard
+  - torchmetrics
+  - psutil
+  - submitit
+  - pandas
+  - scanpy
+  - squidpy
+  - python-igraph 
+  - leidenalg
+  - jupyter
+  - jupytext
+  - seml
+  - pip:
+    - black
+    - isort
