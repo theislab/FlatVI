@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='spalign',
+    name='PerturbSeq_CMV',
     version='1.0.0',
     author='Leon Hetzel, Alessandro Palma',
     url='',
