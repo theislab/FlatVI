@@ -132,18 +132,17 @@ class CFMLitModule(LightningModule):
 
     def step(self, batch: Any, training: bool = False):
         """Computes the loss on a batch of data."""
-        X = self.unpack_batch(batch).to(self.device)
+        X = self.unpack_batch(batch)
         x0, x1, t_select = self.preprocess_batch(X, training)
-        t_select = t_select.to(self.device)
 
         if self.ot_sampler is not None:
             x0, x1 = self.ot_sampler.sample_plan(x0, x1)
 
         # Sample a t for the interpolation between observations
         if self.hparams.avg_size > 0:
-            t = torch.rand(1, 1).repeat(X.shape[0], 1).to(self.device)
+            t = torch.rand(1, 1).repeat(X.shape[0], 1)
         else:
-            t = torch.rand(X.shape[0], 1).to(self.device)
+            t = torch.rand(X.shape[0], 1)
         ut = x1 - x0
         mu_t = t * x1 + (1 - t) * x0
         sigma_t = self.hparams.sigma_min
