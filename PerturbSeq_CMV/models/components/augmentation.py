@@ -141,6 +141,7 @@ class AugmentationModule(nn.Module):
         jacobian_off_diag_frobenius_reg: float = 0.0,
     ) -> None:
         super().__init__()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu" 
         self.cnf_estimator = cnf_estimator
         names = []
         coeffs = []
@@ -175,7 +176,7 @@ class AugmentationModule(nn.Module):
             regs.append(JacobianOffDiagFrobeniusReg())
         # Names, coefficients and functions for different augmentations
         self.names = names
-        self.coeffs = torch.tensor(coeffs)
+        self.coeffs = torch.tensor(coeffs).to(self.device)
         self.regs = torch.nn.ModuleList(regs)
         assert len(self.coeffs) == len(self.regs)
         self.aug_dims = len(self.coeffs)
@@ -184,6 +185,7 @@ class AugmentationModule(nn.Module):
 
     def forward(self, x):
         """Separates and adds together losses."""
+        x = x.to(self.device)
         if self.cnf_estimator is None:
             aug, x = x[:, : self.aug_dims], x[:, self.aug_dims :]
             reg = aug * self.coeffs

@@ -50,16 +50,10 @@ class TrajectoryDataModule(LightningDataModule):
         self.timepoint_data = [
             self.data[self.labels == lab].astype(np.float32) for lab in self.ulabels
         ]
-        print([i.shape for i in self.timepoint_data])
         self.split()
 
     def split(self):
         """split requires self.hparams.train_val_test_split, timepoint_data, ulabels."""
-        train_val_test_split = self.hparams.train_val_test_split
-        print(train_val_test_split)
-        if isinstance(train_val_test_split, int):
-            self.split_timepoint_data = list(map(lambda x: (x, x, x), self.timepoint_data))
-            return
         splitter = partial(
             random_split,
             lengths=self.hparams.train_val_test_split,
@@ -72,11 +66,11 @@ class TrajectoryDataModule(LightningDataModule):
             tp_dataloaders = [
                 DataLoader(
                     dataset=datasets,
-                    batch_size=1000 * self.hparams.batch_size,
+                    batch_size=self.hparams.batch_size,
                     num_workers=self.hparams.num_workers,
                     pin_memory=self.hparams.pin_memory,
                     shuffle=False,
-                    drop_last=False,
+                    drop_last=True,
                 )
                 for datasets in self.timepoint_data
             ]
@@ -95,10 +89,10 @@ class TrajectoryDataModule(LightningDataModule):
         return CombinedLoader(tp_dataloaders, mode="min_size")
 
     def train_dataloader(self):
-        return self.combined_loader(0, shuffle=True)
+        return self.combined_loader(0, shuffle=True, load_full=True)
 
     def val_dataloader(self):
-        return self.combined_loader(1, shuffle=False, load_full=False)
+        return self.combined_loader(1, shuffle=False, load_full=True)
 
     def test_dataloader(self):
         return self.combined_loader(2, shuffle=False, load_full=True)

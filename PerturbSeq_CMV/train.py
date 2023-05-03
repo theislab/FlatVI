@@ -1,10 +1,12 @@
-import os 
+import sys 
 import pytorch_lightning as pl
 import seml
 import torch
 from sacred import SETTINGS, Experiment
 from functools import partial
-from PerturbSeq_CMV.paths import EXPERIMENT_FOLDER
+
+sys.path.insert(0,"../")
+from paths import EXPERIMENT_FOLDER
 
 from PerturbSeq_CMV.datamodules.distribution_datamodule import TrajectoryDataModule
 from PerturbSeq_CMV.models.cfm_module import CFMLitModule
@@ -38,7 +40,7 @@ def config():
             seml.create_mongodb_observer(db_collection, overwrite=overwrite))
             
 # Training function 
-class Trainer:
+class Solver:
     def __init__(self):
         self.init_all()
     
@@ -55,7 +57,7 @@ class Trainer:
 
     @ex.capture(prefix="training")
     def init_general(self, training):
-        self.task_name = training["task_name"]
+        self.task_name = training["task_name"] 
         
         # Fix seed for reproducibility
         torch.manual_seed(training["seed"])      
@@ -86,7 +88,6 @@ class Trainer:
         # Initialize the model 
         self.model = CFMLitModule(
                             net=self.net,
-                            optimizer=self.optimizer,
                             datamodule=self.datamodule,
                             augmentations= self.augmentations, 
                             **model
@@ -106,28 +107,31 @@ class Trainer:
     @ex.capture(prefix="logger")
     def init_logger(self, logger):
         # Initialize logger 
-        logger = WandbLogger(save_dir=self.current_experiment_dir / "logs", 
+        self.logger = WandbLogger(save_dir=self.current_experiment_dir / "logs", 
                              **logger) 
         
     @ex.capture(prefix="trainer")
     def init_trainer(self, trainer):    
         # Initialize the lightning trainer 
-        trainer = Trainer(default_root_dir=self.current_experiment_dir,
-                          callbacks=[self.model_ckpt_callbacks, self.early_stopping_callbacks], 
+        self.trainer = Trainer(callbacks=[self.model_ckpt_callbacks, self.early_stopping_callbacks], 
+                          default_root_dir=self.current_experiment_dir,
                           logger=self.logger, 
                           **trainer)
         
     def train(self):
         # Fit the model 
         self.trainer.fit(model=self.model, 
-                         datamodule=self.datamodule)
+                          train_dataloaders=self.datamodule.train_dataloader(),
+                          val_dataloaders=self.datamodule.val_dataloader())
         train_metrics = self.trainer.callback_metrics
         
         # Test model 
         ckpt_path = self.trainer.checkpoint_callback.best_model_path
         if ckpt_path == "":
             ckpt_path = None
-        self.trainer.test(model=self.model, datamodule=self.datamodule, ckpt_path=ckpt_path)
+        self.trainer.test(model=self.model, 
+                          dataloaders=self.datamodule.test_dataloader(),
+                          ckpt_path=ckpt_path)
         test_metrics = self.trainer.callback_metrics
 
         # merge train and test metrics
@@ -138,11 +142,11 @@ class Trainer:
 @ex.command(unobserved=True)
 def get_experiment(init_all=True):
     print("get_experiment")
-    experiment = Trainer()
+    experiment = Solver()
     return experiment
 
 @ex.automain
 def train(experiment=None):
     if experiment is None:
-        experiment = Trainer()
+        experiment = Solver()
     return experiment.train()
