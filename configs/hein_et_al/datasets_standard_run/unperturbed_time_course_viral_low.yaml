@@ -1,0 +1,104 @@
+seml:
+  executable: ../scCFM/train.py
+  name: unperturbed_time_course_viral_low
+  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/hein_et_al
+  conda_environment: scCFM
+  project_root_dir: ../../scCFM
+
+slurm:
+  max_simultaneous_jobs: 1
+  experiments_per_job: 1
+  sbatch_options_template: GPU
+  sbatch_options:
+    gres: gpu:1       # num GPUs
+    mem: 90G          # memory
+    cpus-per-task: 6  # num cores
+    time: 2-00:00     # max time, D-HH:MM
+
+########## HYPERPARAMETER TUNING ##########
+
+fixed: 
+    # General hparameters 
+    training.training:
+      task_name: unperturbed_time_course_viral_low
+      seed: 42
+
+    # Datamodule hyperparameters 
+    datamodule.datamodule:
+      path: /nfs/homedirs/pala/scCFM/project_dir/data/hein_et_al/processed/unperturbed_time_course_viral_low.h5ad
+      x_layer: X_log
+      time_key: experimental_time
+      use_pca: False
+      n_dimensions: Null
+      train_val_test_split: [0.80, 0.2]
+      batch_size: 128
+      num_workers: 2
+
+    # Augmentations
+    augmentations.augmentations:
+      cnf_estimator: null
+      l1_reg: 0.
+      l2_reg: 0.
+      squared_l2_reg: 0.
+      jacobian_frobenius_reg: 0.
+      jacobian_diag_frobenius_reg: 0.
+      jacobian_off_diag_frobenius_reg: 0.
+
+    # Net
+    net.net:
+      hidden_dims: [64, 64, 64]
+      batch_norm: False
+      activation: selu
+
+    # Model
+    model.model:
+      ot_sampler: exact
+      sigma_min: 0.1
+      leaveout_timepoint: -1
+      lr: 0.001
+      weight_decay: 0.00001
+      store_trajectories: False
+      use_real_time: True
+
+    # Callbacks 
+    model_checkpoint.model_checkpoint:
+      filename: "epoch_{epoch:04d}"
+      monitor: val/loss
+      mode: min
+      save_last: True
+      auto_insert_metric_name: False
+
+    early_stopping.early_stopping:
+      monitor: val/loss
+      patience: 20
+      mode: min
+      min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
+      verbose: False # verbosity mode
+      strict: True # whether to crash the training if monitor is not found in the validation metrics
+      check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
+      stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
+      divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
+      check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
+
+    # Logger 
+    logger.logger:
+      offline: False
+      id: null # pass correct id to resume experiment!
+      anonymous: null # enable anonymous logging
+      project: "scCFM"
+      log_model: False # upload lightning ckpts
+      prefix: "" # a string to put at the beginning of metric keys
+      group: ""
+      tags: []
+      job_type: ""
+
+    # Trainer
+    trainer.trainer:
+      min_epochs: 1 
+      max_epochs: 100
+      accelerator: gpu
+      devices: 1
+      log_every_n_steps: 10
+      check_val_every_n_epoch: 1
+      deterministic: False
+      inference_mode: True

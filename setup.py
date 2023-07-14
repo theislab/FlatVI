@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='PerturbSeq_CMV',
+    name='scCFM',
     version='1.0.0',
     author='Leon Hetzel, Alessandro Palma',
     url='',
-    packages=['PerturbSeq_CMV/']+find_packages(),
+    packages=['scCFM/']+find_packages(),
     zip_safe=False,
     include_package_data=True
 )

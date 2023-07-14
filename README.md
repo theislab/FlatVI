@@ -1,4 +1,4 @@
-# PerturbSeq_CMV
+# scCFM
 
 ## Install repo
 
@@ -12,5 +12,5 @@ pip install -e .
 Add the project folder to your repo:
 
 ```sh
-ln -s /lustre/groups/ml01/projects/2023_hoparl_perturbseq_alessandro.palma project_folder
+ln -s /your/project/dir project_folder
 ```

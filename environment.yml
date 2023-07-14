@@ -1,4 +1,4 @@
-name: PerturbSeq_CMV
+name: scCFM
 channels:
   - conda-forge
 dependencies:
@@ -23,3 +23,8 @@ dependencies:
     - black
     - isort
     - cellrank
+    - openpyxl
+    - scvi-tools
+    - torchdyn==1.0.1
+    - pot
+    - wandb
