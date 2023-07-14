@@ -1,5 +1,5 @@
-from scPDETraversal.modules.mlp import MLP
-from scPDETraversal.modules.losses import mse_loss, nb_loss, zinb_loss
+from scCFM.modules.mlp import MLP
+from scCFM.modules.losses import mse_loss, nb_loss, zinb_loss
 import torch
 import torch.nn as nn
 
@@ -91,6 +91,7 @@ class VAE(torch.nn.Module):
         
     def forward(self, batch):
         x, library_size = batch["x"], batch["library_size"]
+        # Derive a better range for x
         x_log = torch.log(1+x)
         mu, logvar = self.encode(x_log)
         z = self.reparameterize(mu, logvar)
@@ -136,7 +137,7 @@ class VAE(torch.nn.Module):
     
 if __name__=="__main__":
     vae = VAE(in_dim=2000, 
-                 hidden_dims=[256,256, 256], 
+                 hidden_dims=[256, 256, 256], 
                  batch_norm=True, 
                  dropout=False, 
                  dropout_p=0, 
