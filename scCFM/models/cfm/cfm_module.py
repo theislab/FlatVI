@@ -6,11 +6,6 @@ from pytorch_lightning import LightningDataModule, LightningModule
 from torchdyn.core import NeuralODE
 from torch.optim import AdamW
 
-from scCFM.models.cfm.components.augmentation import (
-    AugmentationModule,
-    AugmentedVectorField,
-    Sequential,
-)
 from scCFM.models.cfm.components.distribution_distances import compute_distribution_distances
 from scCFM.models.cfm.components.optimal_transport import OTPlanSampler
 from scCFM.models.cfm.components.plotting import store_trajectories
@@ -23,7 +18,6 @@ class CFMLitModule(LightningModule):
         self,
         net: Any,
         datamodule: LightningDataModule,
-        augmentations: AugmentationModule,
         ot_sampler: Optional[Union[str, Any]] = None,
         sigma_min: float = 0.1,
         leaveout_timepoint: int = -1,
@@ -36,7 +30,6 @@ class CFMLitModule(LightningModule):
         Args:
             net (torch.nn.Module): Network parametrizing the velocity 
             datamodule (LightningDataModule): Wrapper around data loaders  
-            augmentations (AugmentationModule): Augmentation module 
             ot_sampler (Optional[Union[str, Any]], optional): Type of optimal transport . Defaults to None.
             sigma_min (float, optional): Optimal transport parameter. Defaults to 0.1.
             leaveout_timepoint (int, optional): What timepoint to leave out. Defaults to -1.
@@ -62,30 +55,8 @@ class CFMLitModule(LightningModule):
         # Net represents the neural network modelling the dynamics of the system (velocity)
         self.net = net(dim=datamodule.dim)
         
-        # AugmentationModule instance computing forward augmentations of the input if required 
-        self.augmentations = augmentations
-        self.val_augmentations = AugmentationModule(
-            l1_reg=1,
-            l2_reg=1,
-            squared_l2_reg=1,
-        )
-        
-        # AugmentedVectorField object computes the dynamics over augmented vectors
-        self.aug_net = AugmentedVectorField(self.net, self.augmentations.regs)
-        self.val_aug_net = AugmentedVectorField(self.net, self.val_augmentations.regs)
-        
         # Wrap neural ODE around the network
         self.node = NeuralODE(self.net)
-        
-        # Augmenr plus NODE
-        self.aug_node = Sequential(
-            self.augmentations.augmenter,
-            NeuralODE(self.aug_net, sensitivity="autograd"),
-        )
-        self.val_aug_node = Sequential(
-            self.val_augmentations.augmenter,
-            NeuralODE(self.val_aug_net, solver="rk4"),
-        )
         
         # Define the optimizer and OT batch sampler 
         self.ot_sampler = ot_sampler
@@ -147,11 +118,7 @@ class CFMLitModule(LightningModule):
                                    self.idx2time[ti.item()])
             x0, x1, t1_minus_t0 = torch.stack(x0), torch.stack(x1), torch.tensor(t1_minus_t0).to(self.device)
         else:
-            t1_minus_t0 = None
-            batch_size, _ = X.shape
-            # If no trajectory assume generate from standard normal
-            x0 = torch.randn(batch_size, X.shape[1])
-            x1 = X
+            raise NotImplementedError
         return x0, x1, t_select, t1_minus_t0
 
     def step(self, batch: Any, training: bool = False):
@@ -187,20 +154,17 @@ class CFMLitModule(LightningModule):
         t = t * t1_minus_t0[:, None]  + t_select[:, None]  # Use the batch time selected and sum to the interpolating time 
         t = t.to(torch.float32)
         x = mu_t + sigma_t * torch.randn_like(x0) # Sample from probability path 
-        aug_x = self.aug_net(t, x, augmented_input=False)
+        vt = self.net(t, x)
         
-        # Augmentations used as regularization, vector field for the criterion
-        reg, vt = self.augmentations(aug_x) 
-        return torch.mean(reg), self.criterion(vt, ut)
+        return self.criterion(vt, ut)
 
     def training_step(self, batch: Any, batch_idx: int):
         """Training step - computes vector field and computes regression loss
         """
-        reg, mse = self.step(batch, training=True)
-        loss = mse + reg
+        loss = self.step(batch, training=True)
         prefix = "train"
         self.log_dict(
-            {f"{prefix}/loss": loss, f"{prefix}/mse": mse, f"{prefix}/reg": reg},
+            {f"{prefix}/loss": loss },
             on_step=True,
             on_epoch=False,
             prog_bar=True,
@@ -216,14 +180,13 @@ class CFMLitModule(LightningModule):
         """Evaluation step
         """
         # Reset the state before the next epoch
-        reg, mse = self.step(batch, training=False)
-        loss = mse + reg
+        loss = self.step(batch, training=False)
         self.log_dict(
-            {f"{prefix}/loss": loss, f"{prefix}/mse": mse, f"{prefix}/reg": reg},
+            {f"{prefix}/loss": loss},
             on_step=False,
             on_epoch=True,
         )
-        val_output = {"loss": loss, "mse": mse, "reg": reg, "x": self.unpack_batch(batch).cpu()}
+        val_output = {"loss": loss, "x": self.unpack_batch(batch).cpu()}
         self.state.append(val_output)
         return val_output
 
@@ -252,8 +215,6 @@ class CFMLitModule(LightningModule):
         t_span = torch.linspace(0, 1, 101)  # predictions from 0 to 1            
 
         # Augmentations for regularization
-        aug_dims = self.val_augmentations.aug_dims
-        regs = []
         trajs = []
         for i in range(ts - 1):  # ts represent the external time and is used to select obs
             # If use the real time you have to prompt it to the algorithm
@@ -265,23 +226,13 @@ class CFMLitModule(LightningModule):
             
             # Piecewise integration
             x_start = x[:, i, :].cuda()
-            _, aug_traj = self.val_aug_node(x_start, t_span * t1_minus_t0  + t_select) # Push forward observations
-            aug, traj = aug_traj[-1, :, :aug_dims], aug_traj[-1, :, aug_dims:] # Only pick last observations in the traj
-            del aug_traj
+            _, traj = self.node(x_start, t_span * t1_minus_t0  + t_select) # Push forward observations
+            traj = traj[-1]
             
             trajs.append(traj.detach().cpu())
-            # Mean regs over batch dimension
-            regs.append(torch.mean(aug, dim=0).detach().cpu().numpy())
-            
-        regs = np.stack(regs).mean(axis=0)
-        names = [f"{prefix}/{name}" for name in self.val_augmentations.names]
-        self.log_dict(dict(zip(names, regs)))
         
         # Evaluate the fit - Compare the predicted trajectories (from teacher forcing) with the real ones
-        if self.is_trajectory and prefix == "test" and isinstance(self.state[0]["x"], list):
-            names, dists = compute_distribution_distances(trajs[:-1], x_rest[:-1].cpu())
-        else:
-            names, dists = compute_distribution_distances(trajs, x_rest.cpu())
+        names, dists = compute_distribution_distances(trajs, x_rest.cpu())
         
         # Log results
         names = [f"{prefix}/{name}" for name in names]
