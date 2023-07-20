@@ -1,7 +1,7 @@
 import os 
 
 import numpy as np
-from scCFM.datamodules.components.time_dataset import load_dataset
+from scCFM.datamodules.components.sc_dataset import load_dataset
 from functools import partial
 from typing import Optional, List
 

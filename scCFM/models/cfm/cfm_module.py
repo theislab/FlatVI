@@ -8,7 +8,6 @@ from torch.optim import AdamW
 
 from scCFM.models.cfm.components.distribution_distances import compute_distribution_distances
 from scCFM.models.cfm.components.optimal_transport import OTPlanSampler
-from scCFM.models.cfm.components.plotting import store_trajectories
 
 
 class CFMLitModule(LightningModule):

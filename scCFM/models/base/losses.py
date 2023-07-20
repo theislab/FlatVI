@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 def mse_loss(recon_x, x, reduction=None):
-    mse_loss = torch.nn.functional.mse_loss(recon_x, x, reduction=reduction)
+    mse_loss = torch.nn.functional.mse_loss(recon_x["mu"], x, reduction=reduction)
     return mse_loss
 
 def nb_loss(mu, theta, x, eps=1e-08, reduction=None):
@@ -18,7 +18,6 @@ def nb_loss(mu, theta, x, eps=1e-08, reduction=None):
         - torch.lgamma(theta)
         - torch.lgamma(x + 1)
     )
-
     return res
 
 def zinb_loss(mu, theta, pi, x, eps=1e-08, reduction=None):

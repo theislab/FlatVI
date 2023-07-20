@@ -1,0 +1,86 @@
+seml:
+  executable: ../scCFM/train.py
+  name: eb_training_vae
+  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/ae/eb
+  conda_environment: scCFM
+  project_root_dir: ../../scCFM
+
+slurm:
+  max_simultaneous_jobs: 1
+  experiments_per_job: 1
+  sbatch_options_template: GPU
+  sbatch_options:
+    gres: gpu:1       # num GPUs
+    mem: 90G          # memory
+    cpus-per-task: 6  # num cores
+    time: 2-00:00     # max time, D-HH:MM
+
+########## HYPERPARAMETER TUNING ##########
+
+fixed: 
+    # General hparameters 
+    training.training:
+      task_name: eb_vae
+      seed: 42
+
+    # Datamodule hyperparameters 
+    datamodule.datamodule:
+      path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate.h5ad
+      x_layer: X_norm
+      cond_key: experimental_time
+      use_pca: False
+      n_dimensions: Null
+      train_val_test_split: [0.80, 0.2]
+      batch_size: 128
+      num_workers: 2
+
+    # Model
+    model.model:
+      hidden_dims: [256, 128, 64]
+      batch_norm: True
+      dropout: True
+      dropout_p: 0.1
+      likelihood: nb
+
+    # Callbacks 
+    model_checkpoint.model_checkpoint:
+      filename: "epoch_{epoch:04d}"
+      monitor: val/loss
+      mode: min
+      save_last: True
+      auto_insert_metric_name: False
+
+    early_stopping.early_stopping:
+      monitor: val/loss
+      patience: 20
+      mode: min
+      min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
+      verbose: False # verbosity mode
+      strict: True # whether to crash the training if monitor is not found in the validation metrics
+      check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
+      stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
+      divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
+      check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
+
+    # Logger 
+    logger.logger:
+      offline: False
+      id: null # pass correct id to resume experiment!
+      anonymous: null # enable anonymous logging
+      project: "scCFM"
+      log_model: False # upload lightning ckpts
+      prefix: "" # a string to put at the beginning of metric keys
+      group: ""
+      tags: []
+      job_type: ""
+
+    # Trainer
+    trainer.trainer:
+      min_epochs: 1 
+      max_epochs: 100
+      accelerator: gpu
+      devices: 1
+      log_every_n_steps: 10
+      check_val_every_n_epoch: 1
+      deterministic: False
+      inference_mode: True

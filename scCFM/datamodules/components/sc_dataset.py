@@ -1,10 +1,10 @@
-from typing import Union, List, Optional
+from typing import Optional
 import numpy as np
 import scanpy as sc
 
 def adata_dataset(path: str, 
                   x_layer: str,
-                  time_key: str = "experimental_time", 
+                  cond_key: str = "experimental_time",
                   use_pca: bool = False,
                   n_dimensions: Optional[int] = None
                   ):
@@ -22,7 +22,7 @@ def adata_dataset(path: str,
     adata = sc.read_h5ad(path)
 
     # Time labels
-    times = np.array(adata.obs[time_key])
+    times = np.array(adata.obs[cond_key])
         
     # Return either PCA reduction or the unreduced matrix 
     if use_pca:
@@ -32,17 +32,16 @@ def adata_dataset(path: str,
 
 def load_dataset(path: str, 
                  x_layer: str, 
-                 time_key: str = "experimental_time", 
+                 cond_key: str = "experimental_time", 
                  use_pca: bool = False, 
                  n_dimensions: int = None
                  ):
     """Wrapper around adata_dataset function to implement controls
     """
-    
     if path.endswith("h5ad"):
         return adata_dataset(path=path,
                              x_layer=x_layer,
-                             time_key=time_key, 
+                             cond_key=cond_key, 
                              use_pca=use_pca, 
                              n_dimensions=n_dimensions)
     else:
