@@ -30,11 +30,11 @@ class TrajectoryDataModule(LightningDataModule):
         self.save_hyperparameters(logger=True)
         
         assert os.path.exists(path), "The data path does not exist"
-        
+
         # Collect dataset 
         self.data, self.times = load_dataset(path=path, 
                                                 x_layer=x_layer,
-                                                time_key=time_key,
+                                                cond_key=time_key,
                                                 use_pca=use_pca, 
                                                 n_dimensions=n_dimensions)
         self.dim = self.data.shape[1]

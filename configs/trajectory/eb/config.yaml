@@ -26,28 +26,18 @@ fixed:
     # Datamodule hyperparameters 
     datamodule.datamodule:
       path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate.h5ad
-      x_layer: X_log
+      x_layer: X_norm
       time_key: experimental_time
       use_pca: False
       n_dimensions: Null
       train_val_test_split: [0.80, 0.2]
-      batch_size: 128
+      batch_size: 256
       num_workers: 2
-
-    # Augmentations
-    augmentations.augmentations:
-      cnf_estimator: null
-      l1_reg: 0.
-      l2_reg: 0.
-      squared_l2_reg: 0.
-      jacobian_frobenius_reg: 0.
-      jacobian_diag_frobenius_reg: 0.
-      jacobian_off_diag_frobenius_reg: 0.
 
     # Net
     net.net:
       hidden_dims: [64, 64, 64]
-      batch_norm: False
+      batch_norm: True
       activation: selu
 
     # Model
@@ -57,8 +47,8 @@ fixed:
       leaveout_timepoint: -1
       lr: 0.001
       weight_decay: 0.00001
-      store_trajectories: False
       use_real_time: True
+      freeze_autoencoder: True
 
     # Callbacks 
     model_checkpoint.model_checkpoint:
@@ -70,7 +60,7 @@ fixed:
 
     early_stopping.early_stopping:
       monitor: val/loss
-      patience: 20
+      patience: 50
       mode: min
       min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
       verbose: False # verbosity mode
@@ -82,7 +72,7 @@ fixed:
 
     # Logger 
     logger.logger:
-      offline: False
+      offline: True
       id: null # pass correct id to resume experiment!
       anonymous: null # enable anonymous logging
       project: "scCFM"
@@ -95,10 +85,9 @@ fixed:
     # Trainer
     trainer.trainer:
       min_epochs: 1 
-      max_epochs: 100
+      max_epochs: 200
       accelerator: gpu
       devices: 1
       log_every_n_steps: 10
       check_val_every_n_epoch: 1
       deterministic: False
-      inference_mode: True

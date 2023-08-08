@@ -15,6 +15,7 @@ class CFMLitModule(LightningModule):
 
     def __init__(
         self,
+        autoencoder: Any, 
         net: Any,
         datamodule: LightningDataModule,
         ot_sampler: Optional[Union[str, Any]] = None,
@@ -22,11 +23,11 @@ class CFMLitModule(LightningModule):
         leaveout_timepoint: int = -1,
         lr: float = 0.001, 
         weight_decay: float = 0.00001, 
-        store_trajectories: bool = False,
         use_real_time: bool = True,
+        freeze_autoencoder: bool = True
     ) -> None:
-        """
-        Args:
+        """Args:
+            autoencoder (torch.nn.Module): a pre-trained autoencoder model 
             net (torch.nn.Module): Network parametrizing the velocity 
             datamodule (LightningDataModule): Wrapper around data loaders  
             ot_sampler (Optional[Union[str, Any]], optional): Type of optimal transport . Defaults to None.
@@ -34,25 +35,33 @@ class CFMLitModule(LightningModule):
             leaveout_timepoint (int, optional): What timepoint to leave out. Defaults to -1.
             lr (float, optional): learning rate for optimization. Defaults to 0.001.
             weight_decay (float, optional): weight decay for optimization. Defaults to 0.00001.
-            store_trajectory (bool): store trajectory of points 
-            use_real_time (bool):  
+            use_real_time (bool): use real time instead of fictitious time 
+            freeze_autoencoder (bool): if autoencoder is present, whether its weights should be frozen 
         """
         super().__init__()
         # Save hyperparameters of the model class
         self.save_hyperparameters(
-            ignore=["net", "optimizer", "datamodule", "augmentations"], logger=False
+            ignore=["net", "optimizer", "augmentations"], logger=False
         )
         
         # Contains the outputs of the validation step 
         self.state = []  
     
         # Attributes of the trajectory dataset 
+        self.datamodule = datamodule
         self.is_trajectory = datamodule.IS_TRAJECTORY
         self.dim = datamodule.dim
         self.idx2time = datamodule.idx2time
         
         # Net represents the neural network modelling the dynamics of the system (velocity)
-        self.net = net(dim=datamodule.dim)
+        in_dim = datamodule.dim if autoencoder==None else autoencoder.latent_dim
+        self.net = net(dim=in_dim)
+        
+        # Initialize autoencoder (None if data not encoded) 
+        self.autoencoder = autoencoder.to(self.device)
+        if freeze_autoencoder:
+            for param in self.autoencoder.parameters():
+                param.requires_grad = False
         
         # Wrap neural ODE around the network
         self.node = NeuralODE(self.net)
@@ -84,6 +93,8 @@ class CFMLitModule(LightningModule):
 
     def unpack_batch(self, batch):
         """Unpacks a batch of data to a single tensor."""
+        if self.autoencoder:
+            batch = [self.autoencoder.encode(obs)["z"] for obs in batch]
         if self.is_trajectory:
             return torch.stack(batch, dim=1)  # returns BxTxG
         return batch
@@ -95,13 +106,14 @@ class CFMLitModule(LightningModule):
         if self.is_trajectory:
             batch_size, times, _ = X.shape
             
-            # Select random experimental time except for the left-out timepoint
+            # Select random experimental time index except for the left-out timepoint
             if training and self.hparams.leaveout_timepoint > 0:
                 t_select = torch.randint(times - 2, size=(batch_size,))
                 t_select[t_select >= self.hparams.leaveout_timepoint] += 1
             else:
                 t_select = torch.randint(times - 1, size=(batch_size,))
-                
+            
+            # x0 and x1 batch
             x0 = []
             x1 = []
             t1_minus_t0 = []
@@ -252,4 +264,49 @@ class CFMLitModule(LightningModule):
         return AdamW(params=self.parameters(), 
                      lr=self.lr, 
                      weight_decay=self.weight_decay)
+    
+    def sample_trajectory(self, teacher_forcing=False):
+        # Trajectory results
+        trajs = []
         
+        # Continuous time to integrate between time points
+        t_span = torch.linspace(0, 1, 101)  
+        
+        for batch in self.datamodule.train_dataloader(load_full=True):
+            X = self.unpack_batch(batch)
+            # Contains batch trajectory
+            batch_trajs = []
+            
+            # Time dimension
+            ts = X.shape[1]
+            
+            # Initial timepoint batch
+            x_start = X[:,0,:] # NxG
+            batch_trajs.append(x_start.unsqueeze(1).detach().cpu())
+            for i in range(ts - 1):  
+                # If use the real time you have to prompt it to the algorithm
+                if self.use_real_time:
+                    t_select = self.idx2time[i]
+                    t1_minus_t0 = self.idx2time[i+1] - self.idx2time[i]
+                else:
+                    t1_minus_t0 = torch.ones(1)
+                
+                # Piecewise integration
+                _, traj = self.node(x_start, t_span * t1_minus_t0  + t_select) # Push forward observations
+                traj = traj[-1] # NxG
+                
+                batch_trajs.append(traj.unsqueeze(1).detach().cpu()) # Nx1xG
+                
+                # x_start is starting point for next iteration
+                if teacher_forcing:
+                    x_start = X[:,i+1,:]
+                else:
+                    x_start = traj
+            
+            batch_trajs = torch.cat(batch_trajs, dim=1) # NxTxG
+            trajs.append(batch_trajs)
+        
+        # stack tarjectories
+        trajs = torch.cat(trajs, dim=0)
+        return trajs
+            

@@ -38,8 +38,11 @@ fixed:
     model.model:
       hidden_dims: [256, 128, 64]
       batch_norm: True
-      dropout: True
-      dropout_p: 0.1
+      dropout: False
+      dropout_p: 0
+      n_epochs: 150
+      kl_weight: Null
+      kl_warmup_fraction: 2
       likelihood: nb
 
     # Callbacks 
@@ -52,7 +55,7 @@ fixed:
 
     early_stopping.early_stopping:
       monitor: val/loss
-      patience: 20
+      patience: 10
       mode: min
       min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
       verbose: False # verbosity mode
@@ -68,7 +71,7 @@ fixed:
       id: null # pass correct id to resume experiment!
       anonymous: null # enable anonymous logging
       project: "scCFM"
-      log_model: False # upload lightning ckpts
+      log_model: True # upload lightning ckpts
       prefix: "" # a string to put at the beginning of metric keys
       group: ""
       tags: []
@@ -77,7 +80,7 @@ fixed:
     # Trainer
     trainer.trainer:
       min_epochs: 1 
-      max_epochs: 100
+      max_epochs: 150
       accelerator: gpu
       devices: 1
       log_every_n_steps: 10
