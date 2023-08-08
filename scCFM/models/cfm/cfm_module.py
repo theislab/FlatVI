@@ -41,7 +41,9 @@ class CFMLitModule(LightningModule):
         super().__init__()
         # Save hyperparameters of the model class
         self.save_hyperparameters(
-            ignore=["net", "optimizer", "augmentations"], logger=False
+            ignore=["net", 
+                    "optimizer", 
+                    "augmentations"], logger=False
         )
         
         # Contains the outputs of the validation step 
@@ -52,6 +54,9 @@ class CFMLitModule(LightningModule):
         self.is_trajectory = datamodule.IS_TRAJECTORY
         self.dim = datamodule.dim
         self.idx2time = datamodule.idx2time
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.use_real_time =  use_real_time 
         
         # Net represents the neural network modelling the dynamics of the system (velocity)
         in_dim = datamodule.dim if autoencoder==None else autoencoder.latent_dim
@@ -74,9 +79,6 @@ class CFMLitModule(LightningModule):
             # regularization taken for optimal Schrodinger bridge relationship
             self.ot_sampler = OTPlanSampler(method=ot_sampler, reg=2 * sigma_min**2)
         self.criterion = torch.nn.MSELoss()
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.use_real_time =  use_real_time 
 
     def forward_integrate(self, batch: Any, t_span: torch.Tensor):
         """Forward pass with integration over t_span intervals.
@@ -146,7 +148,7 @@ class CFMLitModule(LightningModule):
         
         # Sample interpolation between couples of observations 
         ut = x1 - x0
-        mu_t = t * x1 + (1 - t) * x0
+        mu_t = t * x0 + (1 - t) * x1
         sigma_t = self.hparams.sigma_min
 
         # If we are starting from right before the leaveout_timepoint then we
