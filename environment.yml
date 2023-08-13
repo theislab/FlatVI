@@ -28,3 +28,4 @@ dependencies:
     - torchdyn==1.0.1
     - pot
     - wandb
+    - stochman
