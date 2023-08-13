@@ -143,6 +143,7 @@ class AE(BaseAutoencoder):
         self.latent_layer = torch.nn.Linear(hidden_dims[-2], self.latent_dim)
     
     def encode(self, x):
+        x = torch.log(1 + x)  
         h = self.encoder_layers(x)
         z = self.latent_layer(h)
         return dict(z=z)
@@ -150,8 +151,7 @@ class AE(BaseAutoencoder):
     def forward(self, batch):
         x = batch["X"]
         library_size = x.sum(1)
-        x_log = torch.log(1 + x)  # for now log transf
-        z = self.encode(x_log)["z"]
+        z = self.encode(x)["z"]
         return self.decode(z, library_size)
     
     def step(self, batch, prefix):
@@ -206,6 +206,7 @@ class VAE(BaseAutoencoder):
             self.anneal_kl = False
         
     def encode(self, x):
+        x = torch.log(1 + x)  # For numerical stability
         h = self.encoder_layers(x)
         mu, logvar = self.mu(h), self.logvar(h)
         z = self.reparameterize(mu, logvar)
@@ -222,8 +223,7 @@ class VAE(BaseAutoencoder):
     def forward(self, batch):
         x = batch["X"]
         library_size = x.sum(1)
-        x_log = torch.log(1 + x)  # just for numerical stability
-        z, mu, logvar = self.encode(x_log).values()
+        z, mu, logvar = self.encode(x).values()
         return self.decode(z, library_size), mu, logvar
 
     def kl_divergence(self, mu, logvar):
@@ -248,7 +248,6 @@ class VAE(BaseAutoencoder):
             return loss
 
     def training_step(self, batch, batch_idx):
-        print(self.autoencoder.parameters())
         loss = self.step(batch, "train")
         return loss
 
@@ -256,7 +255,7 @@ class VAE(BaseAutoencoder):
         self.step(batch, "val")
     
     def amortized_sampling(self, batch):
-        z = self.encode(batch)["z"]
+        z = self.encode(batch["X"])["z"]
         return self.sample_decoder(z)
 
     def random_sampling(self, batch_size):

@@ -25,7 +25,7 @@ class SimpleDenseNet(nn.Module):
     ):
         super().__init__()
         if hidden_dims is None:
-            hidden_dims = [256, 256, 256]
+            hidden_dims = [64, 64, 64]
         dims = [input_size, *hidden_dims, target_size]
         layers = []
         for i in range(len(dims) - 2):
@@ -54,9 +54,6 @@ class VelocityNet(SimpleDenseNet):
     def __init__(self, dim: int, *args, **kwargs):
         super().__init__(input_size=dim + 1, target_size=dim, *args, **kwargs)
 
-    def forward(self, t, x):
+    def forward(self, x):
         """ignore t run model."""
-        if t.dim() < 2:
-            t = t.repeat(x.shape[0])[:, None]
-        x = torch.cat([t, x], dim=-1)
         return self.model(x)

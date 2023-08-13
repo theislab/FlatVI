@@ -25,8 +25,8 @@ fixed:
 
     # Datamodule hyperparameters 
     datamodule.datamodule:
-      path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate.h5ad
-      x_layer: X_norm
+      path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate_latents.h5ad
+      x_layer: X_latents
       time_key: experimental_time
       use_pca: False
       n_dimensions: Null
@@ -37,18 +37,16 @@ fixed:
     # Net
     net.net:
       hidden_dims: [64, 64, 64]
-      batch_norm: True
+      batch_norm: False
       activation: selu
 
     # Model
     model.model:
       ot_sampler: exact
-      sigma_min: 0.1
-      leaveout_timepoint: -1
-      lr: 0.001
-      weight_decay: 0.00001
-      use_real_time: True
+      sigma: 0.1
+      lr: 0.0001
       freeze_autoencoder: True
+      use_real_time: True
 
     # Callbacks 
     model_checkpoint.model_checkpoint:
@@ -59,7 +57,7 @@ fixed:
       auto_insert_metric_name: False
 
     early_stopping.early_stopping:
-      monitor: val/loss
+      monitor: train/loss
       patience: 50
       mode: min
       min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
@@ -85,9 +83,8 @@ fixed:
     # Trainer
     trainer.trainer:
       min_epochs: 1 
-      max_epochs: 200
+      max_epochs: 1000
       accelerator: gpu
       devices: 1
       log_every_n_steps: 10
       check_val_every_n_epoch: 1
-      deterministic: False
