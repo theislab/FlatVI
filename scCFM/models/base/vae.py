@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam
-from scvi.distributions import NegativeBinomial, ZeroInflatedNegativeBinomial
 from torch.distributions import Normal, kl_divergence
 import pytorch_lightning as pl
 
 from scCFM.models.base.mlp import MLP
-
+from scCFM.models.utils import get_distribution, three_d_to_two_d, two_d_to_three_d
 
 class BaseAutoencoder(pl.LightningModule):
     def __init__(
@@ -19,6 +18,7 @@ class BaseAutoencoder(pl.LightningModule):
         dropout_p,
         activation=torch.nn.ReLU,
         likelihood="nb",
+        model_log_library_size=False
     ):
         super(BaseAutoencoder, self).__init__()
 
@@ -26,11 +26,12 @@ class BaseAutoencoder(pl.LightningModule):
         self.in_dim = in_dim
         self.hidden_dims = hidden_dims
         self.batch_norm = batch_norm
-        self.activation = activation
         self.dropout = dropout
         self.dropout_p = dropout_p
+        self.activation = activation
         self.likelihood = likelihood
         self.latent_dim = hidden_dims[-1]
+        self.model_log_library_size = model_log_library_size
 
         # Encoder
         self.encoder_layers = MLP(
@@ -57,62 +58,79 @@ class BaseAutoencoder(pl.LightningModule):
         elif likelihood == "nb":
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
             self.decoder_mu = torch.nn.Linear(hidden_dims[0], self.in_dim)
+            if model_log_library_size:
+                self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
 
         elif likelihood == "zinb":
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
             self.decoder_mu = torch.nn.Linear(hidden_dims[0], self.in_dim)
             self.decoder_rho = torch.nn.Linear(hidden_dims[0], self.in_dim)
-
+            if model_log_library_size:
+                self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
+                
         else:
             raise NotImplementedError
-
+        
     def encode(self, x):
         pass
 
     def decode(self, z, library_size):
+        if len(z.shape) == 3:
+            n_timesteps = z.shape[1]
+            is_3d = True
+            z = three_d_to_two_d(z)
+        else: 
+            is_3d = False
+
+        # Decode z layers
         h = self.decoder_layers(z)
+
+        # Decode the rest 
+        mu = None
+        rho = None
 
         if self.likelihood == "gaussian":
             mu = self.decoder_mu(h)
-            return dict(mu=mu)
 
-        elif self.likelihood == "nb":
+        elif self.likelihood == "nb" or self.likelihood == "zinb":
             mu = self.decoder_mu(h)
             mu = F.softmax(mu, dim=-1)
-            mu = mu*library_size.unsqueeze(-1)
-            return dict(mu=mu)
+            if self.model_log_library_size:
+                library_size = torch.exp(self.decoder_lib(h))
+            else:
+                library_size = library_size.unsqueeze(-1)
+            mu = mu * library_size
 
-        elif self.likelihood == "zinb":
-            mu = self.decoder_mu(h)
-            mu = F.softmax(mu, dim=-1)
-            mu = mu*library_size.unsqueeze(-1)
-            rho = self.decoder_rho(h)
-            return dict(mu=mu, rho=rho)
+            if self.likelihood == "zinb":
+                rho = self.decoder_rho(h)
 
         else:
             raise NotImplementedError
+
+        if is_3d:
+            mu = two_d_to_three_d(mu, n_timesteps)
+            if self.likelihood == "zinb":
+                rho = two_d_to_three_d(rho, n_timesteps)
+
+        if self.likelihood == "zinb":
+            return dict(mu=mu, rho=rho)
+        else:
+            return dict(mu=mu)
 
     def forward(self, batch):
         pass
 
     def reconstruction_loss(self, x, decoder_output):
         if self.likelihood == "gaussian":
-            mu = decoder_output["mu"]
-            distr = Normal(loc=mu, theta=torch.exp(self.log_sigma)*torch.eye(self.in_dim))
-            recon_loss = -distr.log_prob(x).sum(-1)
+            distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
 
-        elif self.likelihood == "nb":
-            mu = decoder_output["mu"]
-            distr = NegativeBinomial(mu=mu, theta=torch.exp(self.theta))
-            recon_loss = -distr.log_prob(x).sum(-1)
-
-        elif self.likelihood == "zinb":
-            mu, rho = decoder_output["mu"], decoder_output["rho"]
-            distr = ZeroInflatedNegativeBinomial(mu=mu, theta=torch.exp(self.theta), zi_logits=rho)
-            recon_loss = -distr.log_prob(x).sum(-1)
+        elif self.likelihood == "nb" or self.likelihood == "zinb":
+            distr = get_distribution(decoder_output, self.theta, likelihood = self.likelihood)
 
         else:
             raise NotImplementedError
+        
+        recon_loss = -distr.log_prob(x).sum(-1)
         return recon_loss
     
     def configure_optimizers(self):
@@ -129,6 +147,7 @@ class AE(BaseAutoencoder):
         dropout_p,
         activation=torch.nn.ELU,
         likelihood="nb",
+        model_log_library_size=False
     ):
         super(AE, self).__init__(
             in_dim,
@@ -138,19 +157,24 @@ class AE(BaseAutoencoder):
             dropout_p,
             activation,
             likelihood,
+            model_log_library_size
         )
         
         self.latent_layer = torch.nn.Linear(hidden_dims[-2], self.latent_dim)
     
     def encode(self, x):
-        x = torch.log(1 + x)  
+        x = torch.log1p(x)  
         h = self.encoder_layers(x)
         z = self.latent_layer(h)
         return dict(z=z)
     
-    def forward(self, batch):
+    def forward(self, batch, library_size=None):
         x = batch["X"]
-        library_size = x.sum(1)
+        if library_size == None:
+            library_size = x.sum(1)
+        else:
+            if type(library_size)!=torch.tensor:
+                library_size = torch.tensor(library_size)
         z = self.encode(x)["z"]
         return self.decode(z, library_size)
     
@@ -179,10 +203,11 @@ class VAE(BaseAutoencoder):
         dropout,
         dropout_p,
         n_epochs: int,
-        kl_warmup_fraction: 0.5,
-        kl_weight: None, 
-        activation=torch.nn.ReLU,
-        likelihood:str="nb"  
+        kl_warmup_fraction: float = 0.5,
+        kl_weight: float = None, 
+        activation = torch.nn.ReLU,
+        likelihood:str = "nb",
+        model_log_library_size=False
     ):
         super(VAE, self).__init__(
             in_dim,
@@ -192,6 +217,7 @@ class VAE(BaseAutoencoder):
             dropout_p,
             activation,
             likelihood,
+            model_log_library_size
         )
 
         # Latent space
@@ -199,14 +225,14 @@ class VAE(BaseAutoencoder):
         self.logvar = nn.Linear(hidden_dims[-2], self.latent_dim)
         if kl_weight==None:
             self.kl_weight = 0
-            self.kl_weight_increase = 1/(kl_warmup_fraction*n_epochs)
+            self.kl_weight_increase = 1/int(kl_warmup_fraction*n_epochs)
             self.anneal_kl = True
         else:
             self.kl_weight = kl_weight
             self.anneal_kl = False
         
     def encode(self, x):
-        x = torch.log(1 + x)  # For numerical stability
+        x = torch.log1p(x)  # For numerical stability
         h = self.encoder_layers(x)
         mu, logvar = self.mu(h), self.logvar(h)
         z = self.reparameterize(mu, logvar)
@@ -220,9 +246,13 @@ class VAE(BaseAutoencoder):
         z = mu + eps * std
         return z
 
-    def forward(self, batch):
+    def forward(self, batch, library_size=None):
         x = batch["X"]
-        library_size = x.sum(1)
+        if library_size == None:
+            library_size = x.sum(1)      
+        else:
+            if type(library_size)!=torch.tensor:
+                library_size = torch.tensor(library_size)      
         z, mu, logvar = self.encode(x).values()
         return self.decode(z, library_size), mu, logvar
 
@@ -256,37 +286,32 @@ class VAE(BaseAutoencoder):
     
     def amortized_sampling(self, batch):
         z = self.encode(batch["X"])["z"]
-        return self.sample_decoder(z)
+        if self.model_log_library_size:
+            library_size = torch.exp(self.decoder_lib(z))
+        else:
+            library_size = batch["X"].sum(1)
+        return self.sample_decoder(z, library_size)
 
-    def random_sampling(self, batch_size):
+    def random_sampling(self, batch_size, library_size=None):
         z = torch.randn(batch_size, self.latent_dim)
-        return self.sample_decoder(z)
+        if self.model_log_library_size:
+            library_size = torch.exp(self.decoder_lib(z))
+        return self.sample_decoder(z, library_size)
         
-    def sample_decoder(self, z_batch):
+    def sample_decoder(self, z_batch, library_size):
         # Decode a z_output
-        decoder_output = self.decode(z_batch)
+        decoder_output = self.decode(z_batch, library_size)
         if self.likelihood == "gaussian":
-            mu = decoder_output["mu"]
-            distr = Normal(loc=mu, theta=torch.sqrt(torch.exp(self.log_sigma)))
+            distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
+            return distr.rsample(z_batch)
+
+        elif self.likelihood == "nb" or self.likelihood == "zinb":
+            distr = get_distribution(decoder_output, self.theta, likelihood = self.likelihood)
             return distr.sample(z_batch)
 
-        elif self.likelihood == "nb":
-            mu = decoder_output["mu"]
-            distr = NegativeBinomial(mu=mu, theta=torch.exp(self.theta))
-            return distr.sample(z_batch)
-
-        elif self.likelihood == "zinb":
-            mu, rho = decoder_output["mu"], decoder_output["rho"]
-            distr = ZeroInflatedNegativeBinomial(
-                mu=mu, theta=torch.exp(self.theta), zi_logits=rho
-            )
-            return distr.sample(z_batch)
         else:
             raise NotImplementedError
     
     def on_train_epoch_end(self):
         if self.anneal_kl:
             self.kl_weight += self.kl_weight_increase
-        else:
-            self.kl_weight += 0
-            

@@ -26,6 +26,8 @@ def adata_dataset(path: str,
         
     # Return either PCA reduction or the unreduced matrix 
     if use_pca:
+        if n_dimensions == None:
+            n_dimensions = adata.obsm["X_pca"].shape[1]
         X = adata.obsm["X_pca"][:, n_dimensions]
     else:
         if x_layer in adata.layers:

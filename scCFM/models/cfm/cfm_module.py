@@ -8,7 +8,7 @@ from torch.optim import Adam
 
 from scCFM.models.cfm.components.distribution_distances import compute_distribution_distances
 from scCFM.models.cfm.components.optimal_transport import OTPlanSampler
-from scCFM.models.cfm.utils import pad_t_like_x
+from scCFM.models.utils import pad_t_like_x
 
 class torch_wrapper(torch.nn.Module):
     """Wraps model to torchdyn compatible format."""

@@ -25,7 +25,7 @@ fixed:
 
     # Datamodule hyperparameters 
     datamodule.datamodule:
-      path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate_latents.h5ad
+      path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/processed/eb_phate_latents.h5ad
       x_layer: X_latents
       time_key: experimental_time
       use_pca: False

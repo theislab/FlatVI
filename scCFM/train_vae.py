@@ -8,7 +8,7 @@ sys.path.insert(0,"../")
 from paths import EXPERIMENT_FOLDER
 
 from scCFM.datamodules.sc_datamodule import scDataModule
-from scCFM.models.base.vae import VAE
+from scCFM.models.base.vae import VAE, AE
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -90,6 +90,7 @@ class Solver:
 
     @ex.capture(prefix="model")
     def init_model(self,
+                    train_vae,
                     hidden_dims,
                     batch_norm,
                     dropout,
@@ -97,18 +98,29 @@ class Solver:
                     n_epochs,
                     kl_warmup_fraction,
                     kl_weight, 
-                    likelihood):
+                    likelihood, 
+                    model_log_library_size):
         
-        # Initialize the model 
-        self.model = VAE(in_dim=self.datamodule.in_dim,
-                        hidden_dims=hidden_dims,
-                        batch_norm=batch_norm,
-                        dropout=dropout,
-                        dropout_p=dropout_p,
-                        n_epochs=n_epochs,
-                        kl_warmup_fraction=kl_warmup_fraction,
-                        kl_weight=kl_weight, 
-                        likelihood=likelihood) 
+        if train_vae:
+            # Initialize the model 
+            self.model = VAE(in_dim=self.datamodule.in_dim,
+                            hidden_dims=hidden_dims,
+                            batch_norm=batch_norm,
+                            dropout=dropout,
+                            dropout_p=dropout_p,
+                            n_epochs=n_epochs,
+                            kl_warmup_fraction=kl_warmup_fraction,
+                            kl_weight=kl_weight, 
+                            likelihood=likelihood,
+                            model_log_library_size=model_log_library_size) 
+        else:
+            self.model = AE(in_dim=self.datamodule.in_dim,
+                            hidden_dims=hidden_dims,
+                            batch_norm=batch_norm, 
+                            dropout=dropout,
+                            dropout_p=dropout_p,
+                            likelihood=likelihood, 
+                            model_log_library_size=model_log_library_size)
         
     @ex.capture(prefix="model_checkpoint")
     def init_checkpoint_callback(self, 

@@ -23,7 +23,7 @@ fixed:
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/eb_phate_latents.h5ad
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/processed/eb_phate_latents.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
