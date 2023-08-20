@@ -16,10 +16,9 @@ class BaseAutoencoder(pl.LightningModule):
         batch_norm,
         dropout,
         dropout_p,
-        activation=torch.nn.ReLU,
-        likelihood="nb",
-        model_log_library_size=False
-    ):
+        activation=torch.nn.ELU,
+        likelihood="nb"
+        ):
         super(BaseAutoencoder, self).__init__()
 
         # Attributes
@@ -31,7 +30,6 @@ class BaseAutoencoder(pl.LightningModule):
         self.activation = activation
         self.likelihood = likelihood
         self.latent_dim = hidden_dims[-1]
-        self.model_log_library_size = model_log_library_size
 
         # Encoder
         self.encoder_layers = MLP(
@@ -58,15 +56,13 @@ class BaseAutoencoder(pl.LightningModule):
         elif likelihood == "nb":
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
             self.decoder_mu = torch.nn.Linear(hidden_dims[0], self.in_dim)
-            if model_log_library_size:
-                self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
+            self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
 
         elif likelihood == "zinb":
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
             self.decoder_mu = torch.nn.Linear(hidden_dims[0], self.in_dim)
             self.decoder_rho = torch.nn.Linear(hidden_dims[0], self.in_dim)
-            if model_log_library_size:
-                self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
+            self.decoder_lib = torch.nn.Linear(hidden_dims[0], 1)
                 
         else:
             raise NotImplementedError
@@ -74,7 +70,7 @@ class BaseAutoencoder(pl.LightningModule):
     def encode(self, x):
         pass
 
-    def decode(self, z, library_size):
+    def decode(self, z):
         if len(z.shape) == 3:
             n_timesteps = z.shape[1]
             is_3d = True
@@ -95,12 +91,11 @@ class BaseAutoencoder(pl.LightningModule):
         elif self.likelihood == "nb" or self.likelihood == "zinb":
             mu = self.decoder_mu(h)
             mu = F.softmax(mu, dim=-1)
-            if self.model_log_library_size:
-                library_size = torch.exp(self.decoder_lib(h))
-            else:
-                library_size = library_size.unsqueeze(-1)
+            
+            library_size = torch.exp(self.decoder_lib(h))
+            library_size = library_size.unsqueeze(-1)
+            
             mu = mu * library_size
-
             if self.likelihood == "zinb":
                 rho = self.decoder_rho(h)
 
@@ -146,9 +141,8 @@ class AE(BaseAutoencoder):
         dropout,
         dropout_p,
         activation=torch.nn.ELU,
-        likelihood="nb",
-        model_log_library_size=False
-    ):
+        likelihood="nb"    
+        ):
         super(AE, self).__init__(
             in_dim,
             hidden_dims,
@@ -156,8 +150,7 @@ class AE(BaseAutoencoder):
             dropout,
             dropout_p,
             activation,
-            likelihood,
-            model_log_library_size
+            likelihood
         )
         
         self.latent_layer = torch.nn.Linear(hidden_dims[-2], self.latent_dim)
@@ -168,15 +161,10 @@ class AE(BaseAutoencoder):
         z = self.latent_layer(h)
         return dict(z=z)
     
-    def forward(self, batch, library_size=None):
+    def forward(self, batch):
         x = batch["X"]
-        if library_size == None:
-            library_size = x.sum(1)
-        else:
-            if type(library_size)!=torch.tensor:
-                library_size = torch.tensor(library_size)
         z = self.encode(x)["z"]
-        return self.decode(z, library_size)
+        return self.decode(z)
     
     def step(self, batch, prefix):
         x = batch["X"]
@@ -205,9 +193,8 @@ class VAE(BaseAutoencoder):
         n_epochs: int,
         kl_warmup_fraction: float = 0.5,
         kl_weight: float = None, 
-        activation = torch.nn.ReLU,
+        activation = torch.nn.ELU,
         likelihood:str = "nb",
-        model_log_library_size=False
     ):
         super(VAE, self).__init__(
             in_dim,
@@ -216,8 +203,7 @@ class VAE(BaseAutoencoder):
             dropout,
             dropout_p,
             activation,
-            likelihood,
-            model_log_library_size
+            likelihood
         )
 
         # Latent space
@@ -246,15 +232,10 @@ class VAE(BaseAutoencoder):
         z = mu + eps * std
         return z
 
-    def forward(self, batch, library_size=None):
-        x = batch["X"]
-        if library_size == None:
-            library_size = x.sum(1)      
-        else:
-            if type(library_size)!=torch.tensor:
-                library_size = torch.tensor(library_size)      
+    def forward(self, batch):
+        x = batch["X"]      
         z, mu, logvar = self.encode(x).values()
-        return self.decode(z, library_size), mu, logvar
+        return self.decode(z), mu, logvar
 
     def kl_divergence(self, mu, logvar):
         p =  Normal(mu, torch.sqrt(torch.exp(0.5 * logvar)))
@@ -286,21 +267,15 @@ class VAE(BaseAutoencoder):
     
     def amortized_sampling(self, batch):
         z = self.encode(batch["X"])["z"]
-        if self.model_log_library_size:
-            library_size = torch.exp(self.decoder_lib(z))
-        else:
-            library_size = batch["X"].sum(1)
-        return self.sample_decoder(z, library_size)
+        return self.sample_decoder(z)
 
-    def random_sampling(self, batch_size, library_size=None):
+    def random_sampling(self, batch_size):
         z = torch.randn(batch_size, self.latent_dim)
-        if self.model_log_library_size:
-            library_size = torch.exp(self.decoder_lib(z))
-        return self.sample_decoder(z, library_size)
+        return self.sample_decoder(z)
         
-    def sample_decoder(self, z_batch, library_size):
+    def sample_decoder(self, z_batch):
         # Decode a z_output
-        decoder_output = self.decode(z_batch, library_size)
+        decoder_output = self.decode(z_batch)
         if self.likelihood == "gaussian":
             distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
             return distr.rsample(z_batch)

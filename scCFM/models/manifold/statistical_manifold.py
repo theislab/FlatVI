@@ -2,6 +2,7 @@ from typing import Optional, Tuple
 
 import torch
 from torch.distributions import kl_divergence
+from torch.autograd.functional import jvp as jac
 
 from stochman.manifold import Manifold
 from stochman.curves import BasicCurve, CubicSpline
@@ -12,21 +13,6 @@ from scCFM.models.manifold.utils import nb_kl
 
 
 class scStatisticalManifold(Manifold):
-    """
-    An interface for computing Statistical Manifolds and defining
-    a geometry in the latent space of a certain model
-    using the pullback of the Fisher-Rao metric.
-
-    The methods for computing shortest paths and metrics are layed out in:
-
-    Pulling Back Information Geometry
-
-    Georgios Arvanitidis, Miguel González-Duque, Alison Pouplin
-    Dimitris Kalatzis & Søren Hauberg.
-
-    https://arxiv.org/abs/2106.05367
-    """
-
     def __init__(self, model: torch.nn.Module) -> None:
         """
         Class constructor:
@@ -164,13 +150,19 @@ class scStatisticalManifold(Manifold):
                                                             return_losses=return_losses)
         return curve, losses
 
-    def metric(self, points: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
-
-    def decode(self, z: torch.tensor):
-        """
-        Decodes a point z into p(x|z), where p(x|z) can be
-        any Distribution from torch.distributions.
-        """
-        raise NotImplementedError
-    
+    def metric(self, p):    
+        # Compute decoder's Jacobian 
+        mu, jv = jac(func=self.model.decode,
+                             inputs=p,
+                             create_graph=True)
+        
+        if self.likelihood == "nb":
+            # Compute the Fisher matrix 
+            nb_fisher = self.model.theta / (mu * (self.model.theta + mu))
+            
+        
+        
+                             
+                              
+                              
+                             

@@ -1,7 +1,7 @@
 seml:
   executable: ../scCFM/train_vae.py
-  name: sweep_ae_eb_lib
-  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_ae_eb/logs
+  name: sweep_vae_eb_lib
+  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../scCFM
 
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: sweep_ae_eb_lib
+  training.task_name: sweep_vae_eb_lib
   training.seed: 42
 
   # Datamodule hyperparameters 
@@ -33,13 +33,12 @@ fixed:
   datamodule.num_workers: 2
 
   # Model
-  model.n_epochs: Null
+  model.n_epochs: 200
   model.kl_weight: Null
   model.likelihood: nb
   model.dropout: False
   model.dropout_p: False
-  model.train_vae: False
-  model.kl_warmup_fraction: Null
+  model.train_vae: True
 
   # Callbacks 
   model_checkpoint.filename: "epoch_{epoch:04d}"
@@ -62,7 +61,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: scCFM_ae_sweep_lib
+  logger.project: scCFM_vae_sweep_lib
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""
@@ -76,7 +75,7 @@ fixed:
   trainer.log_every_n_steps: 10
 
 random:
-  samples: 10
+  samples: 12
   seed: 42
 
   model.hidden_dims: 
@@ -85,11 +84,16 @@ random:
       - [256, 128, 64]
       - [512, 256, 64]
       - [256, 128, 32]
-      - [512, 256, 128]
 
   model.batch_norm: 
     type: choice 
     options:
       - True
       - False 
-      
+    
+  model.kl_warmup_fraction: 
+    type: choice
+    options:
+      - 0.5
+      - 1
+      - 2
