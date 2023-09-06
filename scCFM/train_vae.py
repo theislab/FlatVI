@@ -9,6 +9,7 @@ from paths import EXPERIMENT_FOLDER
 
 from scCFM.datamodules.sc_datamodule import scDataModule
 from scCFM.models.base.vae import VAE, AE
+from scCFM.models.base.geometric_vae import GeometricNBVAE
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -71,7 +72,7 @@ class Solver:
     def init_datamodule(self, 
                             path,
                             x_layer,
-                            cond_key, 
+                            cond_keys, 
                             use_pca, 
                             n_dimensions, 
                             train_val_test_split,
@@ -81,7 +82,7 @@ class Solver:
         # Initialize datamodule
         self.datamodule = scDataModule(path=path,
                                         x_layer=x_layer,
-                                        cond_key=cond_key,
+                                        cond_keys=cond_keys,
                                         use_pca=use_pca,
                                         n_dimensions=n_dimensions,
                                         train_val_test_split=train_val_test_split,
@@ -90,37 +91,81 @@ class Solver:
 
     @ex.capture(prefix="model")
     def init_model(self,
-                    train_vae,
+                    model_type,
                     hidden_dims,
                     batch_norm,
                     dropout,
                     dropout_p,
-                    n_epochs,
+                    n_epochs_anneal_kl,
                     kl_warmup_fraction,
                     kl_weight, 
                     likelihood, 
-                    model_log_library_size):
-        
-        if train_vae:
+                    learning_rate, 
+                    model_library_size):
+            
+        if model_type == "vae":
             # Initialize the model 
             self.model = VAE(in_dim=self.datamodule.in_dim,
                             hidden_dims=hidden_dims,
                             batch_norm=batch_norm,
                             dropout=dropout,
                             dropout_p=dropout_p,
-                            n_epochs=n_epochs,
+                            n_epochs_anneal_kl=n_epochs_anneal_kl,
                             kl_warmup_fraction=kl_warmup_fraction,
                             kl_weight=kl_weight, 
-                            likelihood=likelihood,
-                            model_log_library_size=model_log_library_size) 
-        else:
+                            likelihood=likelihood, 
+                            learning_rate=learning_rate,
+                            model_library_size=model_library_size) 
+            
+        elif model_type == "ae":
             self.model = AE(in_dim=self.datamodule.in_dim,
                             hidden_dims=hidden_dims,
                             batch_norm=batch_norm, 
                             dropout=dropout,
                             dropout_p=dropout_p,
                             likelihood=likelihood, 
-                            model_log_library_size=model_log_library_size)
+                            learning_rate=learning_rate,
+                            model_library_size=model_library_size)
+        
+        elif model_type == "geometric_vae":
+            vae_kwargs = dict(in_dim=self.datamodule.in_dim,
+                            hidden_dims=hidden_dims,
+                            batch_norm=batch_norm,
+                            dropout=dropout,
+                            dropout_p=dropout_p,
+                            n_epochs_anneal_kl=n_epochs_anneal_kl,
+                            kl_warmup_fraction=kl_warmup_fraction,
+                            kl_weight=kl_weight, 
+                            likelihood=likelihood, 
+                            learning_rate=learning_rate, 
+                            model_library_size=model_library_size)
+            
+            self.init_geometric_vae(vae_kwargs=vae_kwargs)
+        
+        else:
+            raise NotImplementedError
+            
+    @ex.capture(prefix="geometric_vae")
+    def init_geometric_vae(self,
+                            l2, 
+                            fl_weight, 
+                            interpolate_z,
+                            eta_interp, 
+                            compute_metrics_every,
+                            start_jac_after, 
+                            use_c,
+                            vae_kwargs, 
+                            detach_theta):
+        
+        self.model = GeometricNBVAE(l2=l2,
+                                    fl_weight=fl_weight,
+                                    interpolate_z=interpolate_z,
+                                    eta_interp=eta_interp,
+                                    start_jac_after=start_jac_after,
+                                    use_c=use_c,
+                                    compute_metrics_every=compute_metrics_every,
+                                    vae_kwargs=vae_kwargs, 
+                                    detach_theta=detach_theta)
         
     @ex.capture(prefix="model_checkpoint")
     def init_checkpoint_callback(self, 
@@ -140,6 +185,7 @@ class Solver:
     
     @ex.capture(prefix="early_stopping")
     def init_early_stopping_callback(self, 
+                                     perform_early_stopping,
                                      monitor, 
                                      patience, 
                                      mode,
@@ -152,17 +198,20 @@ class Solver:
                                      check_on_train_epoch_end):
         
         # Initialize callbacks 
-        self.early_stopping_callbacks = EarlyStopping(monitor=monitor,
-                                                      patience=patience, 
-                                                      mode=mode,
-                                                      min_delta=min_delta,
-                                                      verbose=verbose,
-                                                      strict=strict,
-                                                      check_finite=check_finite,
-                                                      stopping_threshold=stopping_threshold,
-                                                      divergence_threshold=divergence_threshold,
-                                                      check_on_train_epoch_end=check_on_train_epoch_end
-                                                      )
+        if perform_early_stopping:
+            self.early_stopping_callbacks = EarlyStopping(monitor=monitor,
+                                                        patience=patience, 
+                                                        mode=mode,
+                                                        min_delta=min_delta,
+                                                        verbose=verbose,
+                                                        strict=strict,
+                                                        check_finite=check_finite,
+                                                        stopping_threshold=stopping_threshold,
+                                                        divergence_threshold=divergence_threshold,
+                                                        check_on_train_epoch_end=check_on_train_epoch_end
+                                                        )
+        else:
+            self.early_stopping_callbacks = None
         
     @ex.capture(prefix="logger")
     def init_logger(self, 
@@ -193,8 +242,12 @@ class Solver:
                      devices, 
                      log_every_n_steps):    
         
+        if self.early_stopping_callbacks != None:
+            callbacks = [self.model_ckpt_callbacks, self.early_stopping_callbacks]
+        else:
+            callbacks = self.model_ckpt_callbacks
         # Initialize the lightning trainer 
-        self.trainer = Trainer(callbacks=[self.model_ckpt_callbacks, self.early_stopping_callbacks], 
+        self.trainer = Trainer(callbacks=callbacks, 
                           default_root_dir=self.current_experiment_dir,
                           logger=self.logger, 
                           max_epochs=max_epochs,

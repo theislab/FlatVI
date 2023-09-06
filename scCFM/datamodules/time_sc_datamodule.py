@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader, random_split, Dataset
 from pytorch_lightning import LightningDataModule
 
 class TrajectoryDataset(Dataset):
-        
     def __init__(
         self,
         path: str,
@@ -24,15 +23,18 @@ class TrajectoryDataset(Dataset):
         # Collect dataset 
         self.data, self.times = load_dataset(path=path, 
                                                 x_layer=x_layer,
-                                                cond_key=time_key,
+                                                cond_keys=time_key,
                                                 use_pca=use_pca, 
                                                 n_dimensions=n_dimensions)
+        self.times = self.times["experimental_time"]
+        
+        # Dimensionality of cells
         self.dim = self.data.shape[1]
         
         # Initialize times from lower to higher
         self.times_unique = sorted(np.unique(self.times))
         
-        # Associate time to the process 
+        # Associate index to unique time values 
         self.idx2time = {idx: val for idx, val in enumerate(self.times_unique)}
         
         # Create a list of subset data
@@ -72,10 +74,10 @@ class TrajectoryDataModule(LightningDataModule):
         self.num_workers = num_workers
 
         self.dataset = TrajectoryDataset(path,
-                                            x_layer,
-                                            time_key, 
-                                            use_pca, 
-                                            n_dimensions)
+                                        x_layer,
+                                        time_key, 
+                                        use_pca, 
+                                        n_dimensions)
         
         self.dim = self.dataset.dim
         self.idx2time = self.dataset.idx2time

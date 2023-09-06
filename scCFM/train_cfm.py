@@ -10,7 +10,7 @@ from paths import EXPERIMENT_FOLDER
 
 from scCFM.datamodules.time_sc_datamodule import TrajectoryDataModule
 from scCFM.models.cfm.cfm_module import CFMLitModule
-from scCFM.models.cfm.components.simple_mlp import VelocityNet
+from scCFM.models.cfm.components.mlp import MLP
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -93,21 +93,18 @@ class Solver:
          
     @ex.capture(prefix="net")
     def init_net(self, 
-                 hidden_dims,
-                 batch_norm,
-                 activation):
+                 w,
+                 time_varying):
         
         # Neural network 
-        net_hparams = {"hidden_dims": hidden_dims,
-                           "batch_norm": batch_norm,
-                           "activation": activation}
+        net_hparams = {"dim": self.datamodule.dim,
+                        "w": w,
+                        "time_varying": time_varying}
         
-        self.net = partial(VelocityNet, 
-                           **net_hparams)   
+        self.net = MLP(**net_hparams) 
 
     @ex.capture(prefix="model")
     def init_model(self,
-                   in_dim, 
                    ot_sampler,
                    sigma,
                    lr,
@@ -116,7 +113,6 @@ class Solver:
         
         # Initialize the model 
         self.model = CFMLitModule(
-                            in_dim=in_dim,
                             net=self.net,
                             datamodule=self.datamodule,
                             ot_sampler=ot_sampler, 
@@ -143,6 +139,7 @@ class Solver:
     
     @ex.capture(prefix="early_stopping")
     def init_early_stopping_callback(self, 
+                                     perform_early_stopping,
                                      monitor, 
                                      patience, 
                                      mode,
@@ -155,17 +152,20 @@ class Solver:
                                      check_on_train_epoch_end):
         
         # Initialize callbacks 
-        self.early_stopping_callbacks = EarlyStopping(monitor=monitor,
-                                                      patience=patience, 
-                                                      mode=mode,
-                                                      min_delta=min_delta,
-                                                      verbose=verbose,
-                                                      strict=strict,
-                                                      check_finite=check_finite,
-                                                      stopping_threshold=stopping_threshold,
-                                                      divergence_threshold=divergence_threshold,
-                                                      check_on_train_epoch_end=check_on_train_epoch_end
-                                                      )
+        if perform_early_stopping:
+            self.early_stopping_callbacks = EarlyStopping(monitor=monitor,
+                                                        patience=patience, 
+                                                        mode=mode,
+                                                        min_delta=min_delta,
+                                                        verbose=verbose,
+                                                        strict=strict,
+                                                        check_finite=check_finite,
+                                                        stopping_threshold=stopping_threshold,
+                                                        divergence_threshold=divergence_threshold,
+                                                        check_on_train_epoch_end=check_on_train_epoch_end
+                                                        )
+        else:
+            self.early_stopping_callbacks = None
         
     @ex.capture(prefix="logger")
     def init_logger(self, 
@@ -192,15 +192,21 @@ class Solver:
     @ex.capture(prefix="trainer")
     def init_trainer(self, 
                      max_epochs,
+                     max_steps,
                      accelerator,
                      devices, 
                      log_every_n_steps):    
         
+        if self.early_stopping_callbacks != None:
+            callbacks = [self.model_ckpt_callbacks, self.early_stopping_callbacks]
+        else:
+            callbacks = self.model_ckpt_callbacks
         # Initialize the lightning trainer 
-        self.trainer = Trainer(callbacks=[self.model_ckpt_callbacks, self.early_stopping_callbacks], 
+        self.trainer = Trainer(callbacks=callbacks, 
                           default_root_dir=self.current_experiment_dir,
                           logger=self.logger, 
                           max_epochs=max_epochs,
+                          max_steps=max_steps,
                           accelerator=accelerator,
                           devices=devices,
                           log_every_n_steps=log_every_n_steps)

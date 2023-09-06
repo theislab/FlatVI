@@ -9,17 +9,19 @@ from pytorch_lightning import LightningDataModule
 from lightning.pytorch.utilities.combined_loader import CombinedLoader
 
 class CellDataset(Dataset):
-    def __init__(self, data, batch):
+    def __init__(self, data, cond):
         self.data = data
-        self.batch = batch
+        self.cond = cond 
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
         X = torch.tensor(self.data[idx])
-        batch = torch.tensor(self.batch[idx])
-        return {"X": X.to(torch.float32), "cond": batch.to(torch.float32)}
+        batch_dict = {"X": X.to(torch.float32)}
+        cond_dict = {cond_key: torch.tensor(self.cond[cond_key][idx]) for cond_key in self.cond}
+        batch_dict.update(cond_dict)
+        return batch_dict
 
 class scDataModule(LightningDataModule):
     pass_to_model = True
@@ -28,7 +30,7 @@ class scDataModule(LightningDataModule):
         self,
         path: str,
         x_layer: str,
-        cond_key: str, 
+        cond_keys: str, 
         use_pca: bool, 
         n_dimensions: Optional[int] = None, 
         train_val_test_split: List = [0.8, 0.2],
@@ -42,13 +44,14 @@ class scDataModule(LightningDataModule):
         # Collect dataset 
         self.data, self.cond = load_dataset(path=path, 
                                             x_layer=x_layer,
-                                            cond_key=cond_key,
+                                            cond_keys=cond_keys,
                                             use_pca=use_pca, 
                                             n_dimensions=n_dimensions)
         self.in_dim = self.data.shape[1]
         self.train_val_test_split = train_val_test_split
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.cond_keys = cond_keys
         
         # Associate time to the process 
         self.idx2cond = {idx: val for idx, val in enumerate(np.unique(self.cond))}

@@ -6,27 +6,14 @@ from pytorch_lightning import LightningDataModule, LightningModule
 from torchdyn.core import NeuralODE
 from torch.optim import Adam
 
-from scCFM.models.cfm.components.distribution_distances import compute_distribution_distances
+from scCFM.models.cfm.components.eval.distribution_distances import compute_distribution_distances
 from scCFM.models.cfm.components.optimal_transport import OTPlanSampler
-from scCFM.models.utils import pad_t_like_x
-
-class torch_wrapper(torch.nn.Module):
-    """Wraps model to torchdyn compatible format."""
-
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-
-    def forward(self, t, x):
-        return self.model(torch.cat([x, t.repeat(x.shape[0])[:, None]], 1))
-
+from scCFM.models.utils import pad_t_like_x, torch_wrapper
 
 class CFMLitModule(LightningModule):
     """Conditional Flow Matching Module for training generative models and models over time."""
-
     def __init__(
         self,
-        in_dim: Any,
         net: Any,
         datamodule: LightningDataModule,
         ot_sampler: Optional[Union[str, Any]] = None,
@@ -37,7 +24,6 @@ class CFMLitModule(LightningModule):
         antithetic_time_sampling: bool = True
     ) -> None:
         """Args:
-            autoencoder (torch.nn.Module): a pre-trained autoencoder model 
             net (torch.nn.Module): Network parametrizing the velocity 
             datamodule (LightningDataModule): Wrapper around data loaders  
             ot_sampler (Optional[Union[str, Any]], optional): Type of optimal transport . Defaults to None.
@@ -51,7 +37,7 @@ class CFMLitModule(LightningModule):
         
         # State for evaluation
         self.state = []
-    
+
         # Attributes of the trajectory dataset 
         self.datamodule = datamodule
         self.dim = datamodule.dim
@@ -63,8 +49,7 @@ class CFMLitModule(LightningModule):
         self.antithetic_time_sampling = antithetic_time_sampling
         
         # Net represents the neural network modelling the dynamics of the system (velocity)
-        in_dim = datamodule.dim if self.dim==None else self.dim
-        self.net = net(dim=in_dim)
+        self.net = net
         
         # Wrap neural ODE around the network
         self.node = NeuralODE(torch_wrapper(self.net),
@@ -83,15 +68,16 @@ class CFMLitModule(LightningModule):
         
     def unpack_batch(self, batch):
         """Unpacks a batch of data to a single tensor."""
-        return torch.stack(batch, dim=1)  # returns BxTxG
+        return torch.stack(batch, dim=1)  # returns B x T x G
     
     def forward_integrate(self, batch: Any, t_span: torch.Tensor):
         """Forward pass with integration over t_span intervals.
         (t, x, t_span) -> [x_t_span].
         """
-        X = self.unpack_batch(batch)
+        X = self.unpack_batch(batch)  # returns B x T x G
         X_start = X[:, t_span[0], :]
-        traj = self.node.trajectory(X_start, t_span=t_span)
+        traj = self.node.trajectory(X_start, t_span=t_span)  
+        
         return traj
 
     def forward(self, t: torch.Tensor, x: torch.Tensor):
@@ -100,6 +86,14 @@ class CFMLitModule(LightningModule):
         return self.net(torch.cat([x, t], dim=1))
 
     def sample_times(self, batch_size):
+        """Sample times for conditional flow matching training 
+
+        Args:
+            batch_size (int): the number of times to sample 
+
+        Returns:
+            torch.tensor: the sampled times 
+        """
         if self.antithetic_time_sampling:
             t0 = np.random.uniform(0, 1 / batch_size)
             times = torch.arange(t0, 1.0, 1.0 / batch_size)
@@ -108,25 +102,80 @@ class CFMLitModule(LightningModule):
         return times
 
     def compute_sigma_t(self, t):
+        """Calculate sigma_t
+
+        Args:
+            t (torch.tensor): time for sigma scheduling
+
+        Returns:
+            torch.tensor: variance 
+        """
         return self.sigma
     
     def compute_mu_t(self, x0, x1, t):
+        """Linear interpolation between 
+
+        Args:
+            x0 (torch.tensor): early time point observations
+            x1 (torch.tensor): late time point observations
+            t (torch.tensor): the sampled inteporlation time 
+
+        Returns:
+            torch.tensor: interpolation between early and later time point 
+        """
         t = pad_t_like_x(t, x0)
         return t * x1 + (1 - t) * x0
 
     def sample_xt(self, x0, x1, t, epsilon):
+        """Sample x at time t
+
+        Args:
+            x0 (torch.tensor): early time point observations
+            x1 (torch.tensor): late time point observations
+            t (torch.tensor): the sampled inteporlation time 
+            epsilon (torch.tensor): sampled noise
+
+        Returns:
+            torch.tensor: sampled x in the linear trajectory between x0 and x1
+        """
         mu_t = self.compute_mu_t(x0, x1, t)
         sigma_t = self.compute_sigma_t(t)
         sigma_t = pad_t_like_x(sigma_t, x0)
         return mu_t + sigma_t * epsilon
 
     def compute_conditional_flow(self, x0, x1):
+        """Flow conditioned on x0 and x1
+
+        Args:
+            x0 (torch.tensor): early time point observations
+            x1 (torch.tensor): late time point observations
+
+        Returns:
+            torch.tensor: the conditional flow 
+        """
         return x1 - x0
 
     def sample_noise_like(self, x):
+        """Sample from a random normal distribution 
+
+        Args:
+            x (torch.tensor): observation with desired dimensionality 
+
+        Returns:
+            torch.tensor: noise vector 
+        """
         return torch.randn_like(x)
 
     def sample_location_and_conditional_flow(self, x0, x1):
+        """Sample time, location xt and the conditional flow to regress against 
+
+        Args:
+            x0 (torch.tensor): early time point observations
+            x1 (torch.tensor): late time point observations
+
+        Returns:
+            tuple: time, location and the conditional flow
+        """
         t = self.sample_times(x0.shape[0]).type_as(x0)
         eps = self.sample_noise_like(x0)
         xt = self.sample_xt(x0, x1, t, eps)
@@ -141,12 +190,12 @@ class CFMLitModule(LightningModule):
         ts = []  # Contains the sampled uniform times
         xts = []  # Contains the sampled Xs
         uts = []  # Contains the objective velocities 
-        
+    
         for t_select in range(n_times-1):
             x0 = X[:, t_select, :]
             x1 = X[:, t_select + 1, :]
-            x0, x1 = self.ot_sampler.sample_plan(x0, x1)
-            t, xt, ut = self.sample_location_and_conditional_flow(x0, x1)
+            x0, x1 = self.ot_sampler.sample_plan(x0, x1)  # resample based on a sample plan 
+            t, xt, ut = self.sample_location_and_conditional_flow(x0, x1)  
             
             if self.use_real_time:
                 t1_minus_t0 = self.idx2time[t_select + 1] - self.idx2time[t_select] 
@@ -166,7 +215,7 @@ class CFMLitModule(LightningModule):
     
     def step(self, batch: Any, training: bool = False):
         """Computes the loss on a batch of data."""
-        X = self.unpack_batch(batch).to(self.device)
+        X = self.unpack_batch(batch).to(self.device)  # B x T x G
         t, xt, ut = self.preprocess_batch(X)
         vt = self.net(torch.cat([xt, t], dim=1) )
         
@@ -176,12 +225,7 @@ class CFMLitModule(LightningModule):
         """Training step - computes vector field and computes regression loss
         """
         loss = self.step(batch, training=True)
-        self.log_dict(
-            {f"train/loss": loss },
-            on_step=True,
-            on_epoch=False,
-            prog_bar=True,
-        )
+        self.log("train/loss", loss)
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int):
@@ -189,15 +233,13 @@ class CFMLitModule(LightningModule):
         """
         # Reset the state before the next epoch
         loss = self.step(batch, training=False)
-        self.log_dict(
-            {f"val/loss": loss},
-            on_step=False,
-            on_epoch=True,
-        )
+        self.log("val/loss", loss)
         self.state.append(self.unpack_batch(batch).cpu())
 
     def on_validation_epoch_end(self):
-        self.eval_epoch_end("val")       
+        self.eval_epoch_end("val")    
+        # Reset state
+        self.state = []   
     
     def eval_epoch_end(self, prefix: str):
         """Final evaluation post epoch
@@ -239,11 +281,13 @@ class CFMLitModule(LightningModule):
         names = [f"{prefix}/{name}" for name in names]
         d = dict(zip(names, dists))
         self.log_dict(d)
-        
-        # Reset state
-        self.state = []
             
     def configure_optimizers(self):
+        """Configure model optimizer 
+
+        Returns:
+            torch.optim.optimizer: optimizer for the parameters of the model 
+        """
         return Adam(params=self.parameters(), 
                      lr=self.lr)
         
