@@ -1,0 +1,124 @@
+seml:
+  executable: ../scCFM/train_vae.py
+  name: 1_sweep_lib_deep_geometric_eb
+  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
+  conda_environment: scCFM
+  project_root_dir: ../../../../scCFM
+
+slurm:
+  max_simultaneous_jobs: 2
+  experiments_per_job: 1
+  sbatch_options_template: GPU
+  sbatch_options:
+    gres: gpu:1       # num GPUs
+    mem: 90G          # memory
+    cpus-per-task: 6  # num cores
+    time: 2-00:00     # max time, D-HH:MM
+
+########## HYPERPARAMETER TUNING ##########
+
+fixed: 
+  # General hparameters 
+  training.task_name: 1_sweep_lib_deep_geometric_eb
+  training.seed: 42
+
+  # Datamodule hyperparameters 
+  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/processed/eb_phate.h5ad
+  datamodule.x_layer: X_norm
+  datamodule.cond_keys: experimental_time
+  datamodule.use_pca: False
+  datamodule.n_dimensions: Null
+  datamodule.train_val_test_split: [0.80, 0.2]
+  datamodule.batch_size: 32
+  datamodule.num_workers: 2
+
+  # Model
+  model.model_type: geometric_vae
+  model.n_epochs_anneal_kl: 1000
+  model.kl_weight: Null
+  model.likelihood: nb
+  model.dropout: False
+  model.learning_rate: 0.001
+  model.dropout_p: False
+  model.model_library_size: True
+  model.batch_norm: True
+  model.hidden_dims: [256, 10]
+  model.library_size_regression: False
+  model.data_library_size: True
+  model.kl_warmup_fraction: 2
+
+  # Geometric VAE version
+  geometric_vae.compute_metrics_every: 1
+  geometric_vae.use_c: False
+  geometric_vae.l2: True
+  geometric_vae.eta_interp: 0
+  geometric_vae.interpolate_z: False
+  geometric_vae.start_jac_after: 0
+  geometric_vae.detach_theta: False
+  # geometric_vae.fl_weight: True
+  geometric_vae.anneal_fl_weight: True
+  # geometric_vae.max_fl_weight: Null
+  geometric_vae.n_epochs_anneal_fl: 1000
+  # geometric_vae.fl_anneal_fraction: Null
+  
+
+  # Callbacks 
+  model_checkpoint.filename: "epoch_{epoch:04d}"
+  model_checkpoint.monitor: val/lik
+  model_checkpoint.mode: min
+  model_checkpoint.save_last: True
+  model_checkpoint.auto_insert_metric_name: False
+
+  early_stopping.perform_early_stopping: False
+  early_stopping.monitor: val/loss
+  early_stopping.patience: 50
+  early_stopping.mode: min
+  early_stopping.min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
+  early_stopping.verbose: False # verbosity mode
+  early_stopping.strict: True # whether to crash the training if monitor is not found in the validation metrics
+  early_stopping.check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
+  early_stopping.stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
+  early_stopping.divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
+  early_stopping.check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
+
+  # Logger 
+  logger.offline: False
+  logger.id: null # pass correct id to resume experiment!
+  logger.project: 1_sweep_lib_deep_geometric_eb
+  logger.log_model: True # upload lightning ckpts
+  logger.prefix: "" # a string to put at the beginning of metric keys
+  logger.group: ""
+  logger.tags: []
+  logger.job_type: ""
+
+  # Trainer
+  trainer.max_epochs: 1000
+  trainer.accelerator: gpu
+  trainer.devices: 1
+  trainer.log_every_n_steps: 10
+
+random:
+  samples: 12
+  seed: 42
+
+  geometric_vae.fl_weight: 
+    type: choice
+    options:
+      - 0.1
+      - 1
+      - 10
+      - 100
+
+  geometric_vae.max_fl_weight: 
+    type: choice
+    options:
+      - 1
+      - 5
+      - 10
+
+  geometric_vae.fl_anneal_fraction: 
+    type: choice
+    options:
+      - 0.1
+      - 0.5
+      - 1

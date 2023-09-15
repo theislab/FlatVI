@@ -79,7 +79,8 @@ class Solver:
                         n_dimensions, 
                         train_val_test_split,
                         batch_size,
-                        num_workers):
+                        num_workers, 
+                        model_library_size):
         
         # Initialize datamodule
         self.datamodule = TrajectoryDataModule(path=path,
@@ -89,7 +90,8 @@ class Solver:
                                                n_dimensions=n_dimensions,
                                                train_val_test_split=train_val_test_split,
                                                batch_size=batch_size,
-                                               num_workers=num_workers)
+                                               num_workers=num_workers, 
+                                               model_library_size=model_library_size)
          
     @ex.capture(prefix="net")
     def init_net(self, 

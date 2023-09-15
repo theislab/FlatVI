@@ -55,13 +55,13 @@ def compute_distribution_distances(pred: torch.Tensor, true: Union[torch.Tensor,
         # Compute per time-point distributional distances 
         w1 = wasserstein(a, b, power=1)
         w2 = wasserstein(a, b, power=2)
-        if not pred_is_jagged and not is_jagged:
+        if not pred_is_jagged and not is_jagged and a.shape[0]==b.shape[0]:
             mmd_linear = linear_mmd2(a, b).item()
             mmd_poly = poly_mmd2(a, b, d=2, alpha=1.0, c=2.0).item()
             mmd_rbf = mix_rbf_mmd2(a, b, sigma_list=[0.01, 0.1, 1, 10, 100]).item()
         mean_dists = compute_distances(torch.mean(a, dim=0), torch.mean(b, dim=0))
         median_dists = compute_distances(torch.median(a, dim=0)[0], torch.median(b, dim=0)[0])
-        if pred_is_jagged or is_jagged:
+        if pred_is_jagged or is_jagged or a.shape[0]!=b.shape[0]:
             dists.append((w1, w2, *mean_dists, *median_dists))
         else:
             dists.append((w1, w2, mmd_linear, mmd_poly, mmd_rbf, *mean_dists, *median_dists))

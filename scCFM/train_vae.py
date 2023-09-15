@@ -9,7 +9,7 @@ from paths import EXPERIMENT_FOLDER
 
 from scCFM.datamodules.sc_datamodule import scDataModule
 from scCFM.models.base.vae import VAE, AE
-from scCFM.models.base.geometric_vae import GeometricNBVAE
+from scCFM.models.base.geometric_vae import GeometricNBAE,GeometricNBVAE
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -70,14 +70,14 @@ class Solver:
     
     @ex.capture(prefix="datamodule")
     def init_datamodule(self, 
-                            path,
-                            x_layer,
-                            cond_keys, 
-                            use_pca, 
-                            n_dimensions, 
-                            train_val_test_split,
-                            batch_size,
-                            num_workers):
+                        path,
+                        x_layer,
+                        cond_keys, 
+                        use_pca, 
+                        n_dimensions, 
+                        train_val_test_split,
+                        batch_size,
+                        num_workers):
         
         # Initialize datamodule
         self.datamodule = scDataModule(path=path,
@@ -127,25 +127,38 @@ class Solver:
                             learning_rate=learning_rate,
                             model_library_size=model_library_size)
         
-        elif model_type == "geometric_vae":
-            vae_kwargs = dict(in_dim=self.datamodule.in_dim,
-                            hidden_dims=hidden_dims,
-                            batch_norm=batch_norm,
-                            dropout=dropout,
-                            dropout_p=dropout_p,
-                            n_epochs_anneal_kl=n_epochs_anneal_kl,
-                            kl_warmup_fraction=kl_warmup_fraction,
-                            kl_weight=kl_weight, 
-                            likelihood=likelihood, 
-                            learning_rate=learning_rate, 
-                            model_library_size=model_library_size)
+        elif model_type in ["geometric_ae", "geometric_vae"]:
+            if model_type == "geometric_ae":
+                vae_kwargs = dict(in_dim=self.datamodule.in_dim,
+                                hidden_dims=hidden_dims,
+                                batch_norm=batch_norm,
+                                dropout=dropout,
+                                dropout_p=dropout_p,
+                                kl_weight=kl_weight, 
+                                likelihood=likelihood, 
+                                learning_rate=learning_rate, 
+                                model_library_size=model_library_size)
+
+            elif model_type == "geometric_vae":   
+                vae_kwargs = dict(in_dim=self.datamodule.in_dim,
+                                hidden_dims=hidden_dims,
+                                batch_norm=batch_norm,
+                                dropout=dropout,
+                                dropout_p=dropout_p,
+                                n_epochs_anneal_kl=n_epochs_anneal_kl,
+                                kl_warmup_fraction=kl_warmup_fraction,
+                                kl_weight=kl_weight, 
+                                likelihood=likelihood, 
+                                learning_rate=learning_rate, 
+                                model_library_size=model_library_size)
             
+            self.model_type = model_type
             self.init_geometric_vae(vae_kwargs=vae_kwargs)
-        
+    
         else:
             raise NotImplementedError
             
-    @ex.capture(prefix="geometric_vae")
+    @ex.capture(prefix="geometric_vae") 
     def init_geometric_vae(self,
                             l2, 
                             fl_weight, 
@@ -155,17 +168,40 @@ class Solver:
                             start_jac_after, 
                             use_c,
                             vae_kwargs, 
-                            detach_theta):
+                            detach_theta,
+                            anneal_fl_weight, 
+                            max_fl_weight,
+                            n_epochs_anneal_fl, 
+                            fl_anneal_fraction):
         
-        self.model = GeometricNBVAE(l2=l2,
-                                    fl_weight=fl_weight,
-                                    interpolate_z=interpolate_z,
-                                    eta_interp=eta_interp,
-                                    start_jac_after=start_jac_after,
-                                    use_c=use_c,
-                                    compute_metrics_every=compute_metrics_every,
-                                    vae_kwargs=vae_kwargs, 
-                                    detach_theta=detach_theta)
+        if self.model_type == "geometric_ae":
+            self.model = GeometricNBAE(l2=l2,
+                                        interpolate_z=interpolate_z,
+                                        eta_interp=eta_interp,
+                                        start_jac_after=start_jac_after,
+                                        use_c=use_c,
+                                        compute_metrics_every=compute_metrics_every,
+                                        vae_kwargs=vae_kwargs, 
+                                        detach_theta=detach_theta, 
+                                        fl_weight=fl_weight,
+                                        anneal_fl_weight=anneal_fl_weight, 
+                                        max_fl_weight=max_fl_weight,
+                                        n_epochs_anneal_fl=n_epochs_anneal_fl, 
+                                        fl_anneal_fraction=fl_anneal_fraction)
+        else:   
+            self.model = GeometricNBVAE(l2=l2,
+                                        interpolate_z=interpolate_z,
+                                        eta_interp=eta_interp,
+                                        start_jac_after=start_jac_after,
+                                        use_c=use_c,
+                                        compute_metrics_every=compute_metrics_every,
+                                        vae_kwargs=vae_kwargs, 
+                                        detach_theta=detach_theta,
+                                        fl_weight=fl_weight,
+                                        anneal_fl_weight=anneal_fl_weight, 
+                                        max_fl_weight=max_fl_weight,
+                                        n_epochs_anneal_fl=n_epochs_anneal_fl, 
+                                        fl_anneal_fraction=fl_anneal_fraction)
         
     @ex.capture(prefix="model_checkpoint")
     def init_checkpoint_callback(self, 

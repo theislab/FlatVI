@@ -1,12 +1,11 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as F 
 from torch.optim import Adam
 from torch.distributions import Normal, kl_divergence
 import pytorch_lightning as pl
-
 from scCFM.models.base.mlp import MLP
 from scCFM.models.utils import get_distribution
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 class BaseAutoencoder(pl.LightningModule):
     def __init__(
@@ -19,9 +18,8 @@ class BaseAutoencoder(pl.LightningModule):
         activation=torch.nn.ELU,
         likelihood="nb", 
         learning_rate=1e-4, 
-        model_library_size=True
-        ):
-        """Base autoencoder model
+        model_library_size=True):
+        '''Base autoencoder model
 
         Args:
             in_dim (int): dimension of the samples
@@ -36,7 +34,7 @@ class BaseAutoencoder(pl.LightningModule):
 
         Raises:
             NotImplementedError: in case a likelihood which is not Gaussian, Negative Binomial or Zero Inflated Negative Binomial is selected 
-        """
+        '''
         super(BaseAutoencoder, self).__init__()
 
         # Attributes
@@ -47,9 +45,11 @@ class BaseAutoencoder(pl.LightningModule):
         self.dropout_p = dropout_p
         self.activation = activation
         self.likelihood = likelihood
-        self.latent_dim = hidden_dims[-1]
         self.learning_rate = learning_rate
-        self.model_library_size = float(model_library_size)
+        self.model_library_size = model_library_size
+        
+        # Initialize latent dimension
+        self.latent_dim = hidden_dims[-1]
 
         # Encoder
         self.encoder_layers = MLP(
@@ -69,48 +69,40 @@ class BaseAutoencoder(pl.LightningModule):
             activation=activation,
         )
 
-        if likelihood == "gaussian":
+        if likelihood == 'gaussian':
             self.log_sigma = torch.nn.Parameter(torch.randn(self.in_dim))
-            self.decoder_mu = torch.nn.Linear(hidden_dims[0], self.in_dim)
+            self.decoder_mu_lib = torch.nn.Linear(hidden_dims[0], self.in_dim)
 
-        elif likelihood == "nb":
+        elif likelihood == 'nb':
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
-            self.decoder_mu_lib = torch.nn.Linear(hidden_dims[0], self.in_dim + model_library_size)
+            self.decoder_mu_lib = torch.nn.Linear(hidden_dims[0], self.in_dim)
 
-        elif likelihood == "zinb":
+        elif likelihood == 'zinb':
             self.theta = torch.nn.Parameter(torch.randn(self.in_dim))
-            self.decoder_mu_rho_lib = torch.nn.Linear(hidden_dims[0], self.in_dim * 2 + model_library_size)
+            self.decoder_mu_lib_rho = torch.nn.Linear(hidden_dims[0], self.in_dim * 2)
 
         else:
             raise NotImplementedError
+
         
     def encode(self, x):
         pass
 
     def decode(self, z):
-        """Decoder function
+        '''Decoder function
 
         Args:
             z (torch.tensor): the input latent space
 
         Returns:
             torch.tensor: output of the decoder
-        """
-        # Decode z layers
+        '''
         h = self.decoder_layers(z)
-        
-        # Different decoder options 
-        if self.likelihood == "gaussian":
-            return self.decoder_mu(h)
-
-        elif self.likelihood == "nb":
+        if self.likelihood == 'gaussian' or self.likelihood == 'nb':
             return self.decoder_mu_lib(h)
-                
-        elif self.likelihood == "zinb":
-            return self.decoder_mu_rho_lib(h)
-
-        else:
-            raise NotImplementedError
+        elif self.likelihood == 'zinb':
+            return self.decoder_mu_lib_rho(h)
+        raise None
 
     def forward(self, batch):
         pass
@@ -138,9 +130,17 @@ class BaseAutoencoder(pl.LightningModule):
         return recon_loss
     
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = Adam(self.parameters(), lr=self.learning_rate)
+        scheduler = {'scheduler': ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3),
+                    'monitor': 'val/lik',
+                    'interval': 'epoch',
+                    'frequency': 1,
+                    'threshold': 0.001,
+                    'min_lr': 0.0001
+                    }
+        return [optimizer], [scheduler]
 
-    def _preprocess_decoder_output(self, out):
+    def _preprocess_decoder_output(self, out, library_size=None):
         """Process output of the decoder 
 
         Args:
@@ -149,36 +149,23 @@ class BaseAutoencoder(pl.LightningModule):
         Returns:
             dict: values of the decoder outputs
         """
-        if self.likelihood == "nb" or self.likelihood == "zinb":
-            # Library size is last dimension of the decoder
+        if self.likelihood == 'gaussian' or self.likelihood == 'nb':
+            mu = out
+        else:
+            mu = out[:, :self.in_dim]
+            rho = out[:, self.in_dim:]
+            
+        if self.likelihood == 'nb' or self.likelihood == 'zinb':
             if self.model_library_size:
-                if self.likelihood == "nb":
-                    mu, library_size = out[:, :-1], out[:, -1] 
-                elif self.likelihood == "zinb":
-                    mu, rho, library_size = out[:, :self.in_dim], out[:, self.in_dim:-1], out[:, -1]
-                
-                # Preprocess mu 
                 mu = F.softmax(mu, dim=-1)
-                library_size = torch.exp(library_size)
-                mu = mu * library_size.unsqueeze(-1)            
-
+                library_size = library_size.unsqueeze(1)
+                mu = mu * library_size
             else:
-                if self.likelihood == "nb":
-                    mu = out
-                elif self.likelihood == "zinb":
-                    mu, rho = out[:, :self.in_dim], out[:, self.in_dim:-1]
+                mu = torch.exp(mu)
                 
-                # We model the log mean 
-                mu = torch.exp(mu) 
-        
-        else:
-            mu = out           
-
-        # Return zinb only if negative binomial
-        if self.likelihood == "zinb":
+        if self.likelihood == 'zinb':
             return dict(mu=mu, rho=rho)
-        else:
-            return dict(mu=mu)
+        return dict(mu=mu)
         
     def training_step(self, batch, batch_idx):
         """Training step
@@ -217,6 +204,42 @@ class BaseAutoencoder(pl.LightningModule):
         """
         self.step(batch, "test")
         
+    def amortized_sampling(self, batch):
+        '''Amortized sampling of decoder
+
+        Args:
+            batch (dict): batch containing observations and conditions
+            
+        Returns:
+            torch.tensor: sample of the decoder
+        '''
+        z = self.encode(batch['X'])['z']
+        if self.data_library_size:
+            library_size = batch['X'].sum(1)
+        return self.sample_decoder(z, library_size)
+        
+    def sample_decoder(self, z_batch):
+        """Sample decoder function given latent codes 
+
+        Args:
+            z_batch (torch.tensor): latent codes
+
+        Returns:
+            torch.tensor: samples from data distribution
+        """
+        # Decode a z_output
+        decoder_output = self._preprocess_decoder_output(self.decode(z_batch))
+        if self.likelihood == "gaussian":
+            distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
+            return distr.rsample()
+
+        elif self.likelihood == "nb" or self.likelihood == "zinb":
+            distr = get_distribution(decoder_output, self.theta, likelihood = self.likelihood)
+            return distr.sample()
+
+        else:
+            raise NotImplementedError
+        
 class AE(BaseAutoencoder):
     def __init__(
         self,
@@ -228,7 +251,8 @@ class AE(BaseAutoencoder):
         activation=torch.nn.ELU,
         likelihood="nb", 
         learning_rate=1e-4,
-        model_library_size=False
+        model_library_size=False, 
+        kl_weight=0.0
         ):
         """Standard autoencoder class
 
@@ -252,10 +276,10 @@ class AE(BaseAutoencoder):
             activation,
             likelihood, 
             learning_rate, 
-            model_library_size
-        )
+            model_library_size)
 
         self.latent_layer = torch.nn.Linear(hidden_dims[-2], self.latent_dim)
+        self.kl_weight = kl_weight
     
     def encode(self, x):
         """Encoder function
@@ -294,11 +318,15 @@ class AE(BaseAutoencoder):
         Returns:
             torch.tensor: loss
         """
-        x = batch["X"]
-        decoder_output = self.forward(batch)
-        loss = torch.mean(self.reconstruction_loss(x, self._preprocess_decoder_output(decoder_output)))
-        self.log(f"{prefix}/loss", loss, prog_bar=x)
-        if prefix == "train":
+        x = batch['X']
+        library_size = x.sum(1)
+        decoder_output, z = self.forward(batch)
+        decoder_output = self._preprocess_decoder_output(decoder_output, library_size)
+        
+        recon_loss = self.reconstruction_loss(x, decoder_output)
+        loss = torch.mean(recon_loss + self.kl_weight * torch.norm(z, 1, **('dim',)))
+        self.log(f'''{prefix}/loss''', loss, x, **('prog_bar',))
+        if prefix == 'train':
             return loss
 
 class VAE(BaseAutoencoder):
@@ -315,8 +343,7 @@ class VAE(BaseAutoencoder):
         activation = torch.nn.ELU,
         likelihood = "nb",
         learning_rate = 1e-4, 
-        model_library_size = False
-        ):
+        model_library_size = False):
         """Standard variational autoencoder class
 
         Args:
@@ -346,7 +373,7 @@ class VAE(BaseAutoencoder):
         )
 
         # Latent space
-        self.mu_logvar = nn.Linear(hidden_dims[-2], self.latent_dim * 2)
+        self.mu_logvar = torch.nn.Linear(hidden_dims[-2], self.latent_dim * 2)
         if kl_weight==None:
             self.kl_weight = 0
             self.kl_weight_increase = 1/int(kl_warmup_fraction*n_epochs_anneal_kl)
@@ -427,31 +454,34 @@ class VAE(BaseAutoencoder):
             torch.tensor: loss
         """
         x = batch["X"]
+        
+        # Library size from data 
+        if self.model_library_size:
+            library_size = x.sum(1)
+        else:
+            library_size = None
+            
         decoder_output, _, mu, logvar = self.forward(batch)
+        decoder_output = self._preprocess_decoder_output(decoder_output, library_size)
+        
         # Raw decoder output must be processed befor reconstruction loss
-        recon_loss = self.reconstruction_loss(x, self._preprocess_decoder_output(decoder_output))
+        recon_loss = self.reconstruction_loss(x, decoder_output)
         kl_div = self.kl_divergence(mu, logvar)
-        kl_weight = min([self.kl_weight, 1])
+        
+        if self.anneal_kl:
+            kl_weight = min([self.kl_weight, 1])
+        else: 
+            kl_weight = self.kl_weight
 
         loss = torch.mean(recon_loss + kl_weight * kl_div)
+        
         dict_losses = {f"{prefix}/loss": loss,
                        f"{prefix}/kl": kl_div.mean(),
                        f"{prefix}/lik": recon_loss.mean()}
+        
         self.log_dict(dict_losses, prog_bar=True)
         if prefix == "train":
             return loss
-    
-    def amortized_sampling(self, batch):
-        """Amortized sampling of decoder
-
-        Args:
-            batch (dict): batch containing observations and conditions
-            
-        Returns:
-            torch.tensor: sample of the decoder
-        """
-        z = self.encode(batch["X"])["z"]
-        return self.sample_decoder(z)
 
     def random_sampling(self, batch_size):
         """Sample from normal latent codes and decode
@@ -464,31 +494,10 @@ class VAE(BaseAutoencoder):
         """
         z = torch.randn(batch_size, self.latent_dim)
         return self.sample_decoder(z)
-        
-    def sample_decoder(self, z_batch):
-        """Sample decoder function given latent codes 
-
-        Args:
-            z_batch (torch.tensor): latent codes
-
-        Returns:
-            torch.tensor: samples from data distribution
-        """
-        # Decode a z_output
-        decoder_output = self._preprocess_decoder_output(self.decode(z_batch))
-        if self.likelihood == "gaussian":
-            distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
-            return distr.rsample()
-
-        elif self.likelihood == "nb" or self.likelihood == "zinb":
-            distr = get_distribution(decoder_output, self.theta, likelihood = self.likelihood)
-            return distr.sample()
-
-        else:
-            raise NotImplementedError
     
     def on_train_epoch_end(self):
         """Action at the end of training epoch
         """
         if self.anneal_kl:
             self.kl_weight += self.kl_weight_increase
+            

@@ -314,4 +314,3 @@ class TargetConditionalFlowMatcher(ConditionalFlowMatcher):
         """
         del x0
         return (x1 - (1 - self.sigma) * xt) / (1 - (1 - self.sigma) * t)
-

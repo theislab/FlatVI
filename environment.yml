@@ -2,8 +2,7 @@ name: scCFM
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
-  - pip
+  - python=3.10
   - pip:
     - matplotlib
     - seaborn
@@ -12,20 +11,20 @@ dependencies:
     - scipy
     - pre-commit
     - scikit-learn
-    - tensorboard
-    - torchmetrics
     - psutil
     - submitit
     - pandas
     - jupyter
-    - jupytext
     - seml
     - black
     - isort
     - cellrank
     - openpyxl
     - scvi-tools
-    - torchdyn==1.0.1
     - pot
     - wandb
     - stochman
+    - tensorboard
+    - torchmetrics
+    - graphtools
+    - scib_metrics

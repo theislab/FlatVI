@@ -32,6 +32,7 @@ class CFMLitModule(LightningModule):
             weight_decay (float, optional): weight decay for optimization. Defaults to 0.00001.
             use_real_time (bool): use real time instead of fictitious time 
             freeze_autoencoder (bool): if autoencoder is present, whether its weights should be frozen 
+            antithetic_time_sampling (bool): sample whole time interval per batch
         """
         super().__init__()
         
@@ -77,7 +78,6 @@ class CFMLitModule(LightningModule):
         X = self.unpack_batch(batch)  # returns B x T x G
         X_start = X[:, t_span[0], :]
         traj = self.node.trajectory(X_start, t_span=t_span)  
-        
         return traj
 
     def forward(self, t: torch.Tensor, x: torch.Tensor):

@@ -28,7 +28,7 @@ def adata_dataset(path: str,
     
     cond = {}
     for cond_key in cond_keys:
-        cond[cond_key] = adata.obs[cond_key]
+        cond[cond_key] = adata.obs[cond_key].to_numpy()
         if type(cond[cond_key][0]) == str:
             label_encoder = LabelEncoder()
             cond[cond_key] = label_encoder.fit_transform(cond[cond_key])
