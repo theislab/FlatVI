@@ -83,6 +83,6 @@ class torch_wrapper(torch.nn.Module):
         super().__init__()
         self.model = model
 
-    def forward(self, t, x):
+    def forward(self, t, x, args):
         return self.model(torch.cat([x, t.repeat(x.shape[0])[:, None]], 1))
     

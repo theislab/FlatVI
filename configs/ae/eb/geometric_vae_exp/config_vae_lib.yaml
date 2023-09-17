@@ -43,8 +43,6 @@ fixed:
   model.model_library_size: True
   model.batch_norm: True
   model.hidden_dims: [256, 10]
-  model.library_size_regression: False
-  model.data_library_size: True
   model.kl_warmup_fraction: 2
 
   # Geometric VAE version

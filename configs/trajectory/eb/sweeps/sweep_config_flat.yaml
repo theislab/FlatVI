@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_cfm.py
-  name: sweep_cfm_eb_latent_flat
+  name: 1_OFFICIAL_cfm_eb_latent_flats
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM

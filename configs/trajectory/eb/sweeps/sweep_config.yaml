@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_cfm.py
-  name: sweep_cfm_eb_latent 
+  name: 1_OFFICIAL_cfm_eb_latent_vae 
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
     # General hparameters 
-    training.task_name: sweep_cfm_eb_latent
+    training.task_name: 1_OFFICIAL_cfm_eb_latent_vae
     training.seed: 42
 
     # Datamodule hyperparameters 
@@ -66,7 +66,7 @@ fixed:
     # Logger 
     logger.offline: False
     logger.id: null # pass correct id to resume experiment!
-    logger.project: sweep_cfm_eb_latent
+    logger.project: 1_OFFICIAL_cfm_eb_latent_vae
     logger.log_model: True # upload lightning ckpts
     logger.prefix: "" # a string to put at the beginning of metric keys
     logger.group: ""

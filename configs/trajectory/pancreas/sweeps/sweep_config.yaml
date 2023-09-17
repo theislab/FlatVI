@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_cfm.py
-  name: sweep_cfm_pancreas_latent 
+  name: 3_OFFICIAL_cfm_eb_latent_vae 
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,26 +19,30 @@ slurm:
 
 fixed: 
     # General hparameters 
-    training.task_name: sweep_cfm_pancreas_latent
+    training.task_name: 3_OFFICIAL_cfm_eb_latent_vae
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/pancreas/flat/pancreas.h5ad
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/pancreas/flat/pancreas_lib.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
     datamodule.n_dimensions: Null
     datamodule.train_val_test_split: [0.90, 0.1]
     datamodule.num_workers: 2
+    datamodule.batch_size: 256
+    datamodule.model_library_size: True
 
     # Net
-    net.w: 10
+    net.w: 64
     net.time_varying: True
 
     # Model
     model.ot_sampler: exact
     model.sigma: 0.1
-    model.use_real_time: True
+    model.use_real_time: False
+    model.lr: 0.001
+    model.antithetic_time_sampling: False
 
     # Callbacks 
     model_checkpoint.filename: "epoch_{epoch:04d}"
@@ -62,7 +66,7 @@ fixed:
     # Logger 
     logger.offline: False
     logger.id: null # pass correct id to resume experiment!
-    logger.project: sweep_cfm_pancreas_latent
+    logger.project: 3_OFFICIAL_cfm_eb_latent_vae
     logger.log_model: True # upload lightning ckpts
     logger.prefix: "" # a string to put at the beginning of metric keys
     logger.group: ""
@@ -70,30 +74,8 @@ fixed:
     logger.job_type: ""
 
     # Trainer
-    trainer.max_epochs: 1000
+    trainer.max_epochs: Null
+    trainer.max_steps: 20000
     trainer.accelerator: gpu
     trainer.devices: 1
     trainer.log_every_n_steps: 50
-
-random:
-  samples: 10
-  seed: 42
-
-  datamodule.batch_size: 
-    type: choice
-    options:
-      - 256 
-      - 512
-      - 1024
-
-  model.lr: 
-    type: choice
-    options:
-      - 0.001
-      - 0.0001
-
-  model.antithetic_time_sampling: 
-    type: choice
-    options:
-      - True
-      - False

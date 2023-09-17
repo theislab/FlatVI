@@ -21,8 +21,8 @@ class CFMLitModule(LightningModule):
         lr: float = 0.001, 
         weight_decay: float = 0.00001, 
         use_real_time: bool = True,
-        antithetic_time_sampling: bool = True
-    ) -> None:
+        antithetic_time_sampling: bool = True,
+        leaveout_timepoint=-1):
         """Args:
             net (torch.nn.Module): Network parametrizing the velocity 
             datamodule (LightningDataModule): Wrapper around data loaders  
@@ -48,6 +48,7 @@ class CFMLitModule(LightningModule):
         self.sigma = sigma
         self.use_real_time = use_real_time
         self.antithetic_time_sampling = antithetic_time_sampling
+        self.leaveout_timepoint = leaveout_timepoint
         
         # Net represents the neural network modelling the dynamics of the system (velocity)
         self.net = net
@@ -192,11 +193,20 @@ class CFMLitModule(LightningModule):
         uts = []  # Contains the objective velocities 
     
         for t_select in range(n_times-1):
+            if t_select==self.leaveout_timepoint:
+                continue
+
+            # Account for leaving out a time point 
+            t_next = t_select + 2 if t_select==(self.leaveout_timepoint-1) else t_select + 1
             x0 = X[:, t_select, :]
-            x1 = X[:, t_select + 1, :]
-            x0, x1 = self.ot_sampler.sample_plan(x0, x1)  # resample based on a sample plan 
+            x1 = X[:, t_next, :]
+            x0, x1 = self.ot_sampler.sample_plan(x0, x1)  # resample based on a sample plan
             t, xt, ut = self.sample_location_and_conditional_flow(x0, x1)  
             
+            if t_select==(self.leaveout_timepoint-1):
+                t = t * 2
+                ut = ut / 2
+                        
             if self.use_real_time:
                 t1_minus_t0 = self.idx2time[t_select + 1] - self.idx2time[t_select] 
                 t = pad_t_like_x(t * t1_minus_t0 + self.idx2time[t_select], x0)

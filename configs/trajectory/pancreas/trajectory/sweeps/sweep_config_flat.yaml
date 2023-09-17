@@ -1,0 +1,81 @@
+seml:
+  executable: ../scCFM/train_cfm.py
+  name: 3_OFFICIAL_cfm_pancreas_latent_vae
+  output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
+  conda_environment: scCFM
+  project_root_dir: ../../../../scCFM
+
+slurm:
+  max_simultaneous_jobs: 2
+  experiments_per_job: 1
+  sbatch_options_template: GPU
+  sbatch_options:
+    gres: gpu:1       # num GPUs
+    mem: 90G          # memory
+    cpus-per-task: 6  # num cores
+    time: 2-00:00     # max time, D-HH:MM
+
+########## HYPERPARAMETER TUNING ##########
+
+fixed: 
+    # General hparameters 
+    training.task_name: sweep_cfm_eb_latent_geom
+    training.seed: 42
+
+    # Datamodule hyperparameters 
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/flat/eb_flat_lib.h5ad
+    datamodule.x_layer: X_latents
+    datamodule.time_key: experimental_time
+    datamodule.use_pca: False
+    datamodule.n_dimensions: Null
+    datamodule.train_val_test_split: [0.90, 0.1]
+    datamodule.num_workers: 2
+    datamodule.batch_size: 256
+    datamodule.model_library_size: True
+
+    # Net
+    net.w: 64
+    net.time_varying: True
+
+    # Model
+    model.ot_sampler: exact
+    model.sigma: 0.1
+    model.use_real_time: False
+    model.lr: 0.001
+    model.antithetic_time_sampling: False
+
+    # Callbacks 
+    model_checkpoint.filename: "epoch_{epoch:04d}"
+    model_checkpoint.monitor: train/loss
+    model_checkpoint.mode: min
+    model_checkpoint.save_last: True
+    model_checkpoint.auto_insert_metric_name: False
+
+    early_stopping.perform_early_stopping: False
+    early_stopping.monitor: train/loss
+    early_stopping.patience: 200
+    early_stopping.mode: min
+    early_stopping.min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
+    early_stopping.verbose: False # verbosity mode
+    early_stopping.strict: True # whether to crash the training if monitor is not found in the validation metrics
+    early_stopping.check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
+    early_stopping.stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
+    early_stopping.divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
+    early_stopping.check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
+
+    # Logger 
+    logger.offline: False
+    logger.id: null # pass correct id to resume experiment!
+    logger.project: sweep_cfm_eb_latent_flat
+    logger.log_model: True # upload lightning ckpts
+    logger.prefix: "" # a string to put at the beginning of metric keys
+    logger.group: ""
+    logger.tags: []
+    logger.job_type: ""
+
+    # Trainer
+    trainer.max_epochs: Null
+    trainer.max_steps: 20000
+    trainer.accelerator: gpu
+    trainer.devices: 1
+    trainer.log_every_n_steps: 50

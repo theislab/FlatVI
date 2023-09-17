@@ -7,6 +7,26 @@ from torchdyn.core import NeuralODE
 import torch.nn.functional as F
 from scCFM.models.cfm.cfm_module import torch_wrapper
 
+def standardize_adata(adata, key):
+    """
+    standardize anndata and add a key to adata.layers
+    """
+    X_copy = adata.X.copy()
+    adata.layers[key] = (X_copy - np.mean(X_copy, axis=0)) / np.std(X_copy, axis=0)
+    
+def add_keys_to_dict(metric_dict, metric_list):
+    """
+    Update a dictionary with a list
+    """
+    metric_list_zipped = dict(zip(metric_list[0], metric_list[1]))
+    for m in metric_list_zipped:
+        if m in metric_dict:
+            metric_dict[m].append(metric_list_zipped[m])
+        else:
+            metric_dict[m] = []
+            metric_dict[m].append(metric_list_zipped[m])
+    return metric_dict
+
 def real_reconstructed_cells_adata(model, 
                                    datamodule,
                                    process_amortized_adata=False,
@@ -85,9 +105,10 @@ def real_reconstructed_cells_adata(model,
         sc.tl.umap(adata_z)
         
     # Create anndata mu 
-    adata_mu = sc.AnnData(X=recons_cells_mu, 
-                        obs=annot_df)
-    
+    if process_amortized_adata:
+        adata_mu = sc.AnnData(X=recons_cells_mu, 
+                            obs=annot_df)
+        
     # Create anndata real 
     if process_amortized_adata:
         amortized_and_real = np.concatenate([real_cells, recons_cells], axis=0)
@@ -134,7 +155,7 @@ def add_velocity_to_adata(adata, model, device, model_library_size=True):
     else:
         adata.layers["velocity"] = velocities[:, :-1]
     
-def compute_velocity_projection(adata, xkey, vkey, basis):
+def compute_velocity_projection(adata, xkey, vkey):
     """
     Project vector fiels onto low dimensional embedding 
     """
@@ -193,7 +214,9 @@ def decode_trajectory(X_0,
                        idx2time, 
                        device, 
                        use_real_time, 
-                       model_library_size=True):
+                       model_library_size=True, 
+                       keep_time_d=False, 
+                       append_last=True):
     """
     Compute trajectory given the model 
     """
@@ -223,9 +246,12 @@ def decode_trajectory(X_0,
         X_t = X_0
         times += [idx2time[0] for _ in range(X_t.shape[0])]
         for t in range(len(idx2time)-1):
-            times += [idx2time[t+1] for _ in range(X_t.shape[0])]
+            time_range = torch.linspace(idx2time[t], idx2time[t+1], 1000)
+            if append_last:
+                times += [idx2time[t+1] for _ in range(X_t.shape[0])]
+            else:
+                times += list(torch.cat([idx2time[t]+time_range for _ in range(X_t.shape[0])]))
             if use_real_time:
-                time_range = torch.linspace(idx2time[t], idx2time[t+1], 1000)
                 traj = node.trajectory(X_t.float().to(device),
                                             t_span=time_range,
                                             )
@@ -234,11 +260,23 @@ def decode_trajectory(X_0,
                 traj = node.trajectory(X_t.float().to(device),
                                             t_span=time_range,
                                             )
-            X_t = traj[-1]
-            mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size)
-            mu_trajs.append(mu_traj)
-            x_trajs.append(x_traj)
-    return torch.cat(mu_trajs, dim=0), torch.cat(x_trajs, dim=0), times
+            if append_last: 
+                X_t = traj[-1]
+                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size)
+                mu_trajs.append(mu_traj)
+                x_trajs.append(x_traj)
+            else:
+                to_keep = torch.linspace(0,1000,5).to(torch.int)
+                X_t = traj[:, to_keep, :]
+                X_t = X_t.view(-1, X_t.shape[-1])
+                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size)
+                mu_trajs.append(mu_traj)
+                x_trajs.append(x_traj)
+    
+    if not keep_time_d:
+        return torch.cat(mu_trajs, dim=0), torch.cat(x_trajs, dim=0), times
+    else:
+        return torch.stack(mu_trajs, dim=1), torch.stack(x_trajs, dim=1), times
 
 def decode_state_lib_traj(model, X_t, model_library_size):
     """Perform decoding at a trajectory snapshot
@@ -252,5 +290,3 @@ def decode_state_lib_traj(model, X_t, model_library_size):
         mu_t_hat = torch.exp(model.decode(X_t))
         X_t_hat = model.sample_decoder(X_t).detach().cpu()
     return mu_t_hat.detach().cpu(), X_t_hat
-
-    

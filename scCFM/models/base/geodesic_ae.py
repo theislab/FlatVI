@@ -80,7 +80,8 @@ class GeodesicAE(AE):
         dropout_p,
         activation=torch.nn.ELU,
         likelihood="nb", 
-        learning_rate=1e-4
+        learning_rate=1e-4,
+        model_library_size=None
         ):
         """Standard autoencoder class
 
@@ -104,9 +105,7 @@ class GeodesicAE(AE):
             activation,
             likelihood, 
             learning_rate, 
-            model_library_size, 
-            library_size_regression, 
-            data_library_size
+            model_library_size
         )
 
         self.latent_layer = torch.nn.Linear(hidden_dims[-2], self.latent_dim)
@@ -115,7 +114,7 @@ class GeodesicAE(AE):
         self.criterion = nn.MSELoss()
 
         self.decoder_layers = MLP(
-            hidden_dims=[*hidden_dims[::-1]],
+            hidden_dims=[*hidden_dims[::-1], in_dim],
             batch_norm=batch_norm,
             dropout=dropout,
             dropout_p=dropout_p,
@@ -189,7 +188,8 @@ class GeodesicAE(AE):
 
         loss = torch.mean(loss)
         
-        dict_losses = {f"{prefix}/recon_loss": recon_loss,
+        dict_losses = {f"{prefix}/loss": loss,
+                        f"{prefix}/recon_loss": loss,
                         f"{prefix}/kl": loss_dist.mean()}
         self.log_dict(dict_losses, prog_bar=True)
         if prefix == "train":

@@ -111,7 +111,8 @@ class Solver:
                    sigma,
                    lr,
                    use_real_time, 
-                   antithetic_time_sampling):
+                   antithetic_time_sampling,
+                   leaveout_timepoint=-1):
         
         # Initialize the model 
         self.model = CFMLitModule(
@@ -121,7 +122,8 @@ class Solver:
                             sigma=sigma, 
                             lr=lr, 
                             use_real_time=use_real_time,
-                            antithetic_time_sampling=antithetic_time_sampling) 
+                            antithetic_time_sampling=antithetic_time_sampling, 
+                            leaveout_timepoint=leaveout_timepoint) 
         
     @ex.capture(prefix="model_checkpoint")
     def init_checkpoint_callback(self, 

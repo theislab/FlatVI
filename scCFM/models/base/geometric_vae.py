@@ -210,18 +210,9 @@ class GeometricNBAE(BasicGeometricAE, AE):
 
         # Define library size 
         if self.model_library_size:
-            if self.data_library_size:
-                library_size = x.sum(1)
-            else:
-                library_size = self.library_size_decoder(z)
+            library_size = x.sum(1)
         else:
             library_size = None 
-        
-        # Compute library size loss 
-        if self.model_library_size and self.library_size_regression and (not self.data_library_size):
-            library_size_loss = self.library_size_loss(torch.log(x.sum(1)), library_size)
-        else:
-            library_size_loss = 0
         
         # Preprocess the decoder output
         decoder_output = self._preprocess_decoder_output(decoder_output, library_size)
@@ -237,9 +228,9 @@ class GeometricNBAE(BasicGeometricAE, AE):
         
         # Loss function
         if self.fl_weight == 0 or self.n_epochs_so_far < self.start_jac_after:
-            loss = torch.mean(recon_loss + library_size_loss + self.kl_weight * torch.norm(z, dim=1))
+            loss = torch.mean(recon_loss + self.kl_weight * torch.norm(z, dim=1))
         else:
-            loss = torch.mean(recon_loss + fl_weight * fl_loss + library_size_loss + self.kl_weight * torch.norm(z, dim=1))
+            loss = torch.mean(recon_loss + fl_weight * fl_loss + self.kl_weight * torch.norm(z, dim=1))
             
         dict_losses = {f"{prefix}/loss": loss,
                        f"{prefix}/lik": recon_loss.mean(), 
@@ -329,18 +320,9 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
 
         # Define library size 
         if self.model_library_size:
-            if self.data_library_size:
-                library_size = x.sum(1)
-            else:
-                library_size = self.library_size_decoder(z)
+            library_size = x.sum(1)
         else:
             library_size = None 
-        
-        # Compute library size loss 
-        if self.model_library_size and self.library_size_regression and (not self.data_library_size):
-            library_size_loss = self.library_size_loss(torch.log(x.sum(1)), library_size)
-        else:
-            library_size_loss = 0
         
         decoder_output = self._preprocess_decoder_output(decoder_output, library_size)
         recon_loss = self.reconstruction_loss(x, decoder_output)
@@ -362,9 +344,9 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
         
         # Loss function
         if self.fl_weight == 0 or self.n_epochs_so_far < self.start_jac_after:
-            loss = torch.mean(recon_loss + kl_weight * kl_div + library_size_loss)
+            loss = torch.mean(recon_loss + kl_weight * kl_div)
         else:
-            loss = torch.mean(recon_loss + kl_weight * kl_div + fl_weight * fl_loss + library_size_loss)
+            loss = torch.mean(recon_loss + kl_weight * kl_div + fl_weight * fl_loss)
             
         dict_losses = {f"{prefix}/loss": loss,
                        f"{prefix}/kl": kl_div.mean(),

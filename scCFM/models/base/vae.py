@@ -2,10 +2,13 @@ import torch
 import torch.nn.functional as F 
 from torch.optim import Adam
 from torch.distributions import Normal, kl_divergence
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 import pytorch_lightning as pl
+
 from scCFM.models.base.mlp import MLP
 from scCFM.models.utils import get_distribution
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 class BaseAutoencoder(pl.LightningModule):
     def __init__(
@@ -68,6 +71,9 @@ class BaseAutoencoder(pl.LightningModule):
             dropout_p=dropout_p,
             activation=activation,
         )
+        
+        if self.model_library_size:
+            self.library_size_decoder = torch.nn.Linear(self.latent_dim, 1)
 
         if likelihood == 'gaussian':
             self.log_sigma = torch.nn.Parameter(torch.randn(self.in_dim))
@@ -84,7 +90,6 @@ class BaseAutoencoder(pl.LightningModule):
         else:
             raise NotImplementedError
 
-        
     def encode(self, x):
         pass
 
@@ -98,10 +103,13 @@ class BaseAutoencoder(pl.LightningModule):
             torch.tensor: output of the decoder
         '''
         h = self.decoder_layers(z)
+        
         if self.likelihood == 'gaussian' or self.likelihood == 'nb':
             return self.decoder_mu_lib(h)
+        
         elif self.likelihood == 'zinb':
             return self.decoder_mu_lib_rho(h)
+        
         raise None
 
     def forward(self, batch):
@@ -132,12 +140,12 @@ class BaseAutoencoder(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=self.learning_rate)
         scheduler = {'scheduler': ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3),
-                    'monitor': 'val/lik',
-                    'interval': 'epoch',
-                    'frequency': 1,
-                    'threshold': 0.001,
-                    'min_lr': 0.0001
-                    }
+                        'monitor': 'val/loss',
+                        'interval': 'epoch',
+                        'frequency': 1,
+                        'threshold': 0.001,
+                        'min_lr': 0.0001
+                        }
         return [optimizer], [scheduler]
 
     def _preprocess_decoder_output(self, out, library_size=None):
@@ -214,11 +222,13 @@ class BaseAutoencoder(pl.LightningModule):
             torch.tensor: sample of the decoder
         '''
         z = self.encode(batch['X'])['z']
-        if self.data_library_size:
+        if self.model_library_size:
             library_size = batch['X'].sum(1)
+        else:
+            library_size = None
         return self.sample_decoder(z, library_size)
         
-    def sample_decoder(self, z_batch):
+    def sample_decoder(self, z_batch, library_size=None):
         """Sample decoder function given latent codes 
 
         Args:
@@ -228,7 +238,7 @@ class BaseAutoencoder(pl.LightningModule):
             torch.tensor: samples from data distribution
         """
         # Decode a z_output
-        decoder_output = self._preprocess_decoder_output(self.decode(z_batch))
+        decoder_output = self._preprocess_decoder_output(self.decode(z_batch), library_size)
         if self.likelihood == "gaussian":
             distr = get_distribution(decoder_output, self.log_sigma, likelihood = self.likelihood)
             return distr.rsample()
@@ -319,13 +329,19 @@ class AE(BaseAutoencoder):
             torch.tensor: loss
         """
         x = batch['X']
-        library_size = x.sum(1)
+        
+        if self.model_library_size:
+            library_size = x.sum(1)
+        else:
+            library_size = None    
+            
         decoder_output, z = self.forward(batch)
         decoder_output = self._preprocess_decoder_output(decoder_output, library_size)
         
         recon_loss = self.reconstruction_loss(x, decoder_output)
-        loss = torch.mean(recon_loss + self.kl_weight * torch.norm(z, 1, **('dim',)))
-        self.log(f'''{prefix}/loss''', loss, x, **('prog_bar',))
+        loss = torch.mean(recon_loss + self.kl_weight * torch.norm(z, dim=1))
+        self.log(f"{prefix}/loss", loss, x, prog_bar=True)
+        
         if prefix == 'train':
             return loss
 
