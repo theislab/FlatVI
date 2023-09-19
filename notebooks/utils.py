@@ -277,6 +277,35 @@ def decode_trajectory(X_0,
         return torch.cat(mu_trajs, dim=0), torch.cat(x_trajs, dim=0), times
     else:
         return torch.stack(mu_trajs, dim=1), torch.stack(x_trajs, dim=1), times
+    
+def decode_trajectory_single_step(X_0,
+                                    l_0,
+                                    t_0,
+                                    temporal_model,
+                                    vae, 
+                                    model_library_size=True):
+    """
+    Compute trajectory given the model 
+    """
+    # Node for push forward
+    node = NeuralODE(
+        torch_wrapper(temporal_model.net), solver="dopri5", sensitivity="adjoint", atol=1e-4, rtol=1e-4
+        )
+    
+    # Add library size to the state 
+    if model_library_size:
+        l_0 = l_0 if len(l_0.shape)==2 else l_0.unsqueeze(1)
+        X_0 = torch.cat([X_0, l_0], dim=1)   
+    
+    with torch.no_grad():
+        # Integrate through time
+        X_t = X_0
+        time_range = torch.linspace(t_0, t_0+1, 1000)
+        traj = node.trajectory(X_t.float().to(vae.device),
+                                t_span=time_range)
+        mu_traj, x_traj = decode_state_lib_traj(vae, traj[-1], model_library_size)
+
+    return mu_traj, x_traj, traj[-1]
 
 def decode_state_lib_traj(model, X_t, model_library_size):
     """Perform decoding at a trajectory snapshot

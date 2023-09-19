@@ -23,7 +23,7 @@ fixed:
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/schiebinger_et_al/flat/schiebinger_et_al.h5ad
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/schiebinger_et_al/flat/schiebinger_et_al_lib.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
@@ -75,7 +75,7 @@ fixed:
 
     # Trainer
     trainer.max_epochs: Null
-    trainer.max_steps: 20000
+    trainer.max_steps: 50000
     trainer.accelerator: gpu
     trainer.devices: 1
     trainer.log_every_n_steps: 50

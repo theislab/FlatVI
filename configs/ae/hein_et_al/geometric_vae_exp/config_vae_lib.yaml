@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_vae.py
-  name: 2_OFFICIAL_sweep_lib_deep_vae_hein_et_al_COMPLETE
+  name: 2_OFFICIAL_sweep_lib_deep_vae_hein_et_al_COMPLETEs
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
