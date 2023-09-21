@@ -6,7 +6,7 @@ seml:
   project_root_dir: ../../../../scCFM
 
 slurm:
-  max_simultaneous_jobs: 2
+  max_simultaneous_jobs: 1
   experiments_per_job: 1
   sbatch_options_template: GPU
   sbatch_options:
@@ -23,7 +23,7 @@ fixed:
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/checkpoints/ae/hein_et_al_complete
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/hein_et_al/flat/hein_flat_lib_complete.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
