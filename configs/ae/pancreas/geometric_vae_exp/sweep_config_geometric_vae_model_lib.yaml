@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_vae.py
-  name: 3_sweep_lib_deep_geometric_pancreas
+  name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: 3_sweep_lib_deep_geometric_pancreas
+  training.task_name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
   training.seed: 42
 
   # Datamodule hyperparameters 
@@ -34,7 +34,7 @@ fixed:
 
   # Model
   model.model_type: geometric_vae
-  model.n_epochs_anneal_kl: 1000
+  model.n_epochs_anneal_kl: 500
   model.kl_weight: Null
   model.likelihood: nb
   model.dropout: False
@@ -42,7 +42,7 @@ fixed:
   model.dropout_p: False
   model.model_library_size: True
   model.batch_norm: True
-  model.hidden_dims: [256, 10]
+  model.hidden_dims: [256, 20]
   model.kl_warmup_fraction: 2
 
   # Geometric VAE version
@@ -53,11 +53,11 @@ fixed:
   geometric_vae.interpolate_z: False
   geometric_vae.start_jac_after: 0
   geometric_vae.detach_theta: False
-  # geometric_vae.fl_weight: True
-  geometric_vae.anneal_fl_weight: False
-  geometric_vae.max_fl_weight: Null
-  geometric_vae.n_epochs_anneal_fl: Null
-  geometric_vae.fl_anneal_fraction: Null
+  geometric_vae.fl_weight: 1
+  geometric_vae.anneal_fl_weight: True
+  geometric_vae.max_fl_weight: 10
+  geometric_vae.n_epochs_anneal_fl: 500
+  geometric_vae.fl_anneal_fraction: 0.5
   
 
   # Callbacks 
@@ -82,7 +82,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: 3_sweep_lib_deep_geometric_pancreas
+  logger.project: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""
@@ -90,19 +90,7 @@ fixed:
   logger.job_type: ""
 
   # Trainer
-  trainer.max_epochs: 1000
+  trainer.max_epochs: 500
   trainer.accelerator: gpu
   trainer.devices: 1
   trainer.log_every_n_steps: 10
-
-random:
-  samples: 10
-  seed: 42
-
-  geometric_vae.fl_weight: 
-    type: choice
-    options:
-      - 0.1
-      - 1
-      - 10
-      - 100

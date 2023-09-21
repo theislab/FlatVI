@@ -6,7 +6,6 @@ from typing import Optional, List
 import torch
 from torch.utils.data import DataLoader, random_split, Dataset
 from pytorch_lightning import LightningDataModule
-from lightning.pytorch.utilities.combined_loader import CombinedLoader
 
 class CellDataset(Dataset):
     def __init__(self, data, cond):

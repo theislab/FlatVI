@@ -1,12 +1,12 @@
 seml:
   executable: ../scCFM/train_cfm.py
-  name: sweep_cfm_eb_latent 
+  name: 3_OFFICIAL_cfm_pancreas_latent_complete
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
-  project_root_dir: ../../../../scCFM
+  project_root_dir: ../../../../../scCFM
 
 slurm:
-  max_simultaneous_jobs: 2
+  max_simultaneous_jobs: 1
   experiments_per_job: 1
   sbatch_options_template: GPU
   sbatch_options:
@@ -19,11 +19,11 @@ slurm:
 
 fixed: 
     # General hparameters 
-    training.task_name: sweep_cfm_eb_latent
+    training.task_name: 3_OFFICIAL_cfm_pancreas_latent_vae
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/flat/eb_lib.h5ad
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/hein_et_al/flat/hein_lib_complete.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
@@ -38,7 +38,7 @@ fixed:
     net.time_varying: True
 
     # Model
-    model.ot_sampler: exact
+    model.ot_sampler: unbalanced
     model.sigma: 0.1
     model.use_real_time: False
     model.lr: 0.001
@@ -66,7 +66,7 @@ fixed:
     # Logger 
     logger.offline: False
     logger.id: null # pass correct id to resume experiment!
-    logger.project: sweep_cfm_eb_latent
+    logger.project: 3_OFFICIAL_cfm_pancreas_latent_vae
     logger.log_model: True # upload lightning ckpts
     logger.prefix: "" # a string to put at the beginning of metric keys
     logger.group: ""
