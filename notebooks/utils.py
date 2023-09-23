@@ -5,6 +5,7 @@ import torch
 import cellrank as cr
 from torchdyn.core import NeuralODE
 import torch.nn.functional as F
+import copy
 from scCFM.models.cfm.cfm_module import torch_wrapper
 
 def standardize_adata(adata, key):
@@ -32,7 +33,8 @@ def real_reconstructed_cells_adata(model,
                                    process_amortized_adata=False,
                                    compute_umap=True, 
                                    log1p=False, 
-                                   vae=True):
+                                   vae=True, 
+                                   model_type="scvi"):
     """Create anndatas of latent cells and 
 
     Args:
@@ -47,10 +49,12 @@ def real_reconstructed_cells_adata(model,
     model = model.to(device)
     zs = []
     library_sizes = []
+    
     if process_amortized_adata:
         real_cells = []
         recons_cells = []
         recons_cells_mu = []
+        
     # Annotation for anndata 
     annot = {cond: [] for cond in datamodule.cond}
 
@@ -77,10 +81,16 @@ def real_reconstructed_cells_adata(model,
             library_sizes.append(library_size)
             
             if process_amortized_adata:
-                c = library_size if model.model_library_size else torch.ones_like(library_size)
-                real_cells.append(batch["X"].cpu())
-                recons_cells.append(model.sample_decoder(z, library_size).cpu())
-                recons_cells_mu.append((model.decode(z)*c.unsqueeze(1)).cpu())
+                if model_type=="scvi":
+                    c = library_size if model.model_library_size else torch.ones_like(library_size)
+                    real_cells.append(batch["X"].cpu())
+                    recons_cells.append(model.sample_decoder(z, library_size).cpu())
+                    recons_cells_mu.append((model.decode(z)*c.unsqueeze(1)).cpu())
+                
+                else:
+                    real_cells.append(torch.log1p(batch["X"].cpu()))
+                    recons_cells.append(model.decode(z).cpu())
+                    recons_cells_mu.append(copy.deepcopy(recons_cells[-1]))
     
     # Concatenate the results 
     zs = torch.cat(zs, dim=0).cpu().numpy()
@@ -122,6 +132,7 @@ def real_reconstructed_cells_adata(model,
 
         if log1p:
             sc.pp.log1p(adata_real_amortized)
+
         sc.tl.pca(adata_real_amortized)
         if compute_umap:
             sc.pp.neighbors(adata_real_amortized)

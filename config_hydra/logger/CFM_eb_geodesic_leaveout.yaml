@@ -1,0 +1,8 @@
+offline: False
+id: null # pass correct id to resume experiment!
+project: 1_OFFICIAL_cfm_eb_latent_geodesic_leaveout
+log_model: True # upload lightning ckpts
+prefix: "" # a string to put at the beginning of metric keys
+group: ""
+tags: []
+job_type: ""

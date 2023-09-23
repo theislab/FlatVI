@@ -1,0 +1,5 @@
+run:
+  dir: ./project_dr/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+sweep:
+  dir: ./project_dir/multiruns/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  subdir: ${hydra.job.num}

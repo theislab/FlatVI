@@ -1,0 +1,16 @@
+# @package _global_
+
+# Default configurations
+defaults:
+  - _self_
+  - hydra: default
+  - datamodule: CFM_pancreas_flat_high
+  - checkpoint: default
+  - early_stopping: default
+  - logger: CFM_pancreas_flat_high
+  - model: default
+  - net: default
+  - train: CFM_pancreas_flat_high
+  - trainer: default
+  - launcher: slurm_cluster
+  - hparams_search: null

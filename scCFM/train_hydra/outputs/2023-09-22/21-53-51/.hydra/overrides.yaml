@@ -1,0 +1,3 @@
+- datamodule=CFM_pancreas_high
+- logger=CFM_pancreas_vae_high
+- train=CFM_pancreas_vae_high

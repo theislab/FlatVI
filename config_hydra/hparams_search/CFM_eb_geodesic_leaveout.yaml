@@ -1,0 +1,16 @@
+# @package _global_
+
+defaults:
+  - override /hydra/sweeper: optuna
+
+optimized_metric: "val/loss"
+
+hydra:
+  mode: MULTIRUN 
+
+  sweeper:
+    _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
+    
+    sampler:
+      _target_: optuna.samplers.GridSampler
+      search_space: {"model.leaveout_timepoint": [1, 2, 3]}

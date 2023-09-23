@@ -1,0 +1,5 @@
+- model.leaveout_timepoint=1
+- datamodule=CFM_eb_geodesic_leaveout
+- logger=CFM_eb_geodesic_leaveout
+- train=CFM_eb_geodesic_leaveout
+- hparams_search=CFM_eb_geodesic_leaveout
