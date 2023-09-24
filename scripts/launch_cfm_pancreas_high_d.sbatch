@@ -26,5 +26,5 @@ export HYDRA_FULL_ERROR=1
 
 cd ../scCFM/train_hydra
 # python train_cfm.py datamodule=CFM_pancreas_geodesic_high logger=CFM_pancreas_geodesic_high train=CFM_pancreas_geodesic_high
-# python train_cfm.py datamodule=CFM_pancreas_flat_high logger=CFM_pancreas_flat_high train=CFM_pancreas_flat_high
-python train_cfm.py datamodule=CFM_pancreas_high logger=CFM_pancreas_vae_high train=CFM_pancreas_vae_high
+python train_cfm.py datamodule=CFM_pancreas_flat_high logger=CFM_pancreas_flat_high train=CFM_pancreas_flat_high
+# python train_cfm.py datamodule=CFM_pancreas_high logger=CFM_pancreas_vae_high train=CFM_pancreas_vae_high

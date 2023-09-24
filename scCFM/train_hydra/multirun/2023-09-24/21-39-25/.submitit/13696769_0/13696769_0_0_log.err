@@ -1,0 +1,172 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1695584394.756781 1394414 tfrt_cpu_pjrt_client.cc:349] TfrtCpuClient created.
+No GPU/TPU found, falling back to CPU. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/scvi/_settings.py:63: UserWarning: Since v1.0.0, scvi-tools no longer uses a random seed by default. Run `scvi.settings.seed = 0` to reproduce results from previous versions.
+  self.seed = seed
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/scvi/_settings.py:70: UserWarning: Setting `dl_pin_memory_gpu_training` is deprecated in v1.0 and will be removed in v1.1. Please pass in `pin_memory` to the data loaders instead.
+  self.dl_pin_memory_gpu_training = (
+wandb: Currently logged in as: allepalma. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.15.11 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.10
+wandb: Run data is saved locally in /home/icb/alessandro.palma/environment/scCFM/project_dir/experiments/1_OFFICIAL_cfm_eb_latent_geodesic_LEAVEOUT/wandb/run-20230924_214008-1hye855c
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run noble-firebrand-2
+wandb: ⭐️ View project at https://wandb.ai/allepalma/1_OFFICIAL_cfm_eb_latent_geodesic_leaveout
+wandb: 🚀 View run at https://wandb.ai/allepalma/1_OFFICIAL_cfm_eb_latent_geodesic_leaveout/runs/1hye855c
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA A100-PCIE-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:617: UserWarning: Checkpoint directory /lustre/groups/ml01/workspace/alessandro.palma/scCFM/experiments/1_OFFICIAL_cfm_eb_latent_geodesic_LEAVEOUT/checkpoints exists and is not empty.
+  rank_zero_warn(f"Checkpoint directory {dirpath} exists and is not empty.")
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+  | Name      | Type      | Params
+----------------------------------------
+0 | net       | MLP       | 9.9 K 
+1 | node      | NeuralODE | 9.9 K 
+2 | criterion | MSELoss   | 0     
+----------------------------------------
+9.9 K     Trainable params
+0         Non-trainable params
+9.9 K     Total params
+0.039     Total estimated model params size (MB)
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:442: PossibleUserWarning: The dataloader, val_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 128 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+  rank_zero_warn(
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:212: UserWarning: You called `self.log('leaveout_timepoint', ...)` in your `validation_step` but the value needs to be floating point. Converting it to torch.float32.
+  warning_cache.warn(
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:442: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 128 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+  rank_zero_warn(
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/loops/fit_loop.py:281: PossibleUserWarning: The number of training batches (13) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+  rank_zero_warn(
+wandb: Waiting for W&B process to finish... (success).
+wandb: 
+wandb: Run history:
+wandb:                epoch ▁▁▁▂▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:   leaveout_timepoint ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           train/loss █▆▅▅▃▃▄▃▂▂▃▄▂▃▃▂▃▃▂▃▂▂▁▂▁▂▁▂▁▁▂▂▂▂▂▂▂▂▁▁
+wandb:  trainer/global_step ▁▁▁▂▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:             val/loss █▆▆▅▄▅▃▃▃▃▃▃▄▃▃▃▂▃▂▂▂▂▂▂▁▂▂▁▂▂▁▂▁▂▂▁▁▂▂▂
+wandb: val/t1/1-Wasserstein ▇█▆█▆█▅▅▄▂▇▃▅▄▄▅▃▆▅▅▄▁▄▂▄▃▂▄▂▄▄▂▅▂▅▅▃▄▆▅
+wandb: val/t1/2-Wasserstein ▇█▆█▆▇▅▄▄▂▇▃▅▄▄▅▃▆▅▅▄▁▄▁▄▃▃▄▂▄▄▂▅▂▅▅▃▄▆▅
+wandb:    val/t1/Linear_MMD ▄▆▅█▇█▅▃▄▂█▄▅▄▅▆▃█▆▆▅▂▅▁▅▂▃▄▃▄▅▂▇▃▇▆▄▅█▇
+wandb:       val/t1/Mean_L1 ▇▆▅▇▄█▆▄▆▃▇▄▅▅▅▅▂▆▆▇▄▄▅▁▄▂▂▄▂▅▅▃▆▄▆▇▄▅▆█
+wandb:       val/t1/Mean_L2 ▇▆▆█▆█▅▄▅▃█▄▆▄▅▆▄▇▆▇▆▃▅▁▄▂▃▄▂▅▅▄▆▅▆▆▃▆▇▇
+wandb:      val/t1/Mean_MSE ▇▆▅█▆█▅▃▅▃█▃▆▄▄▅▄▇▆▇▆▃▅▁▄▂▃▄▂▄▅▄▆▄▆▆▃▆▇▇
+wandb:     val/t1/Median_L1 ▄▃▃▆▅▁▁▄▃▆▃▄▄▁▅▆▅▄▄▂▇▆▃▅▆▃█▂▄▄▄▆▃▅▄▄▃▅▄▄
+wandb:     val/t1/Median_L2 ▅▃▃▅▃▂▁▃▃▆▄▃▅▁▄▇▅▄▆▂█▇▅▅▅▅█▄▃▆▄▆▂▆▄▄▅▅▅▃
+wandb:    val/t1/Median_MSE ▄▄▃▅▃▂▂▃▃▆▃▃▅▁▄▇▅▄▆▂█▇▅▅▆▄█▄▃▇▅▆▂▆▄▅▅▆▅▃
+wandb:      val/t1/Poly_MMD ▅▇▅█▇█▅▃▄▃█▄▅▅▅▆▃█▆▆▅▂▅▁▅▂▃▅▃▄▅▃▇▃▇▆▄▅█▇
+wandb:       val/t1/RBF_MMD ▄▇▅▆▆█▇▅▅▄█▅▅▅▆▆▂█▇▆▄▃▇▂▆▃▁▅▃▄▅▄█▄▆▆▄▆▆▇
+wandb: val/t2/1-Wasserstein ▄▃▃▆▅▁▁▄▃▆▃▄▄▁▅▆▅▄▄▃█▆▃▅▆▄█▂▄▄▄▆▃▆▄▄▃▅▅▄
+wandb: val/t2/2-Wasserstein ▄▃▄▅▅▂▂▄▄▆▄▄▄▁▄▅▄▄▃▃▇▆▃▅▆▃█▂▄▅▄▆▃▄▃▄▃▄▆▄
+wandb:    val/t2/Linear_MMD ▄▄▄▆▆▁▁▃▄▅▂▃▃▁▅▅▃▃▃▃▇▅▄▅▅▃█▂▅▃▅▆▃▆▅▅▃▄▅▄
+wandb:       val/t2/Mean_L1 ██▂▂▃▂▂▂▂▄▂▂▃▄▃▃▁▁▂▂▃▃▂▂▁▃▃▁▂▄▂▂▂▂▂▂▄▂▃▂
+wandb:       val/t2/Mean_L2 ██▇▇▆▃▄▄▃▄▃▄▃▃▅▃▃▃▂▂▃▄▂▂▁▃▃▁▂▃▂▂▃▁▂▂▂▂▂▁
+wandb:      val/t2/Mean_MSE ██▇▇▆▃▄▄▄▄▃▄▃▃▅▃▃▃▂▂▃▃▂▂▂▃▃▁▃▃▂▂▃▁▂▂▂▂▂▁
+wandb:     val/t2/Median_L1 █▇▃▃▃▂▂▃▂▄▂▂▄▄▂▅▁▃▄▂▅▅▂▂▁▄▅▁▃█▂▄▂▂▂▁▆▃▄▂
+wandb:     val/t2/Median_L2 ▇█▄▃▃▃▃▃▂▅▃▃▄▅▅▅▂▂▃▂▄▃▃▂▁▄▅▁▂▆▃▃▄▃▄▃▆▃▄▃
+wandb:    val/t2/Median_MSE ██▄▃▄▃▃▃▃▅▃▃▄▅▄▄▂▂▃▂▅▄▃▂▁▄▄▁▂▅▃▃▃▃▄▃▅▃▄▃
+wandb:      val/t2/Poly_MMD ▅▄▅▆▆▁▁▃▄▅▂▃▃▁▅▅▄▄▄▃▇▆▄▅▅▃█▂▅▃▅▆▄▆▅▅▃▄▅▄
+wandb:       val/t2/RBF_MMD ▆▆▇▇█▂▂▃▅▅▂▄▃▁▇▄▃▄▂▃▇▅▄▆▅▄█▃▅▄▅▆▂▅▄▅▄▅▆▄
+wandb: val/t3/1-Wasserstein ██▃▃▄▃▃▃▂▅▃▂▄▅▃▆▁▄▅▂▆▆▃▂▂▅▆▁▄█▃▅▃▃▃▂▇▄▄▃
+wandb: val/t3/2-Wasserstein ▆▇▂▃▄▃▃▃▂▅▂▂▄▅▃▆▁▄▅▂▆▄▃▂▂▅▆▁▄█▂▅▃▂▃▂█▄▅▂
+wandb:    val/t3/Linear_MMD █▅▄▃▃▃▄▃▃▃▂▂▂▁▂▂▂▁▂▁▂▂▁▂▃▁▂▁▂▂▂▁▂▂▂▂▁▂▁▁
+wandb:       val/t3/Mean_L1 █▇▄▅▆▃▅▄▄▂▂▃▃▁▂▃▄▄▃▁▄▂▂▂▅▂▂▂▃▆▃▂▄▃▃▄▂▅▁▁
+wandb:       val/t3/Mean_L2 █▇▄▅▅▄▅▃▃▂▂▄▅▁▂▃▅▅▃▁▅▂▂▃▅▃▂▂▄█▃▂▄▃▄▅▃▅▂▂
+wandb:      val/t3/Mean_MSE █▇▃▅▅▄▆▃▄▂▃▃▅▁▃▃▅▄▃▁▅▂▁▃▆▃▂▂▄▇▃▂▄▃▃▅▂▅▂▂
+wandb:     val/t3/Median_L1 █▇▅▆▄▃▃▃▂▃▃▂▃▁▃▄▂▃▃▁▄▂▂▁▃▂▃▁▁▃▂▂▂▁▂▃▂▂▃▁
+wandb:     val/t3/Median_L2 █▇▄▆▆▄▇▅▄▃▃▄▄▂▂▅▅▅▄▁▆▃▃▃▆▃▃▃▄▇▃▄▆▄▄▆▂▆▂▁
+wandb:    val/t3/Median_MSE █▇▅▆▇▄▆▅▅▃▃▃▄▁▂▄▅▅▄▁▅▃▃▃▆▃▃▃▄▇▄▃▅▄▄▅▂▆▂▁
+wandb:      val/t3/Poly_MMD █▅▄▃▃▃▄▃▃▃▂▂▂▁▂▂▂▁▂▁▂▂▁▂▃▁▂▁▂▂▂▁▂▂▂▂▁▂▁▁
+wandb:       val/t3/RBF_MMD █▆▃▄▄▃▅▂▃▂▂▂▄▁▂▂▄▃▂▁▄▁▁▃▅▂▁▂▃▇▂▂▃▂▃▄▂▄▂▁
+wandb: val/t4/1-Wasserstein █▆▅▆▄▃▃▃▂▃▃▂▃▁▃▄▂▃▃▁▃▂▂▁▃▂▃▁▁▃▂▂▂▂▂▂▂▂▃▁
+wandb: val/t4/2-Wasserstein ▆▆▃█▇▄▂▂▂▄▅▃▄▁▄▇▃▆▅▃▇▃▃▁▅▁▆▁▃▅▃▃▄▄▅▅▂▅▆▅
+wandb:    val/t4/Linear_MMD ██▃▆▆▄▃▃▃▄▄▃▅▂▄▅▃▅▄▂▆▃▃▂▄▂▄▁▃▆▃▃▄▃▄▄▃▄▅▃
+wandb:       val/t4/Mean_L2 ██▄▇▆▄▄▃▄▃▃▂▃▁▄▅▁▄▄▂▆▃▂▂▄▂▄▁▂▆▃▄▃▃▄▅▄▅▄▃
+wandb:      val/t4/Mean_MSE █▇▄▆▆▄▃▃▃▃▃▂▄▁▃▅▃▅▄▂▇▄▃▁▄▂▅▁▃▆▃▄▄▄▄▄▃▅▄▃
+wandb:      val/t4/Poly_MMD ██▄▆▅▄▄▄▃▅▄▄▅▂▄▅▃▅▄▂▆▃▃▂▅▃▄▁▂▇▃▄▄▃▄▅▄▅▅▃
+wandb:       val/t4/RBF_MMD █▇▅█▇▄▂▂▄▃▅▂▄▁▄▆▃▅▅▄█▄▄▁▄▁▆▂▃▅▄▅▄▅▅▅▂▅▆▅
+wandb: 
+wandb: Run summary:
+wandb:                epoch 688
+wandb:   leaveout_timepoint 1.0
+wandb:           train/loss 0.06633
+wandb:  trainer/global_step 8956
+wandb:             val/loss 0.06179
+wandb: val/t1/1-Wasserstein 1.21711
+wandb: val/t1/2-Wasserstein 1.27031
+wandb:    val/t1/Linear_MMD 0.04927
+wandb:       val/t1/Mean_L1 0.20976
+wandb:       val/t1/Mean_L2 0.24032
+wandb:      val/t1/Mean_MSE 0.05775
+wandb:     val/t1/Median_L1 0.03145
+wandb:     val/t1/Median_L2 1.26778
+wandb:    val/t1/Median_MSE 1.20996
+wandb:      val/t1/Poly_MMD 0.22197
+wandb:       val/t1/RBF_MMD 0.18723
+wandb: val/t2/1-Wasserstein 0.17733
+wandb: val/t2/2-Wasserstein 0.14628
+wandb:    val/t2/Linear_MMD 0.03511
+wandb:       val/t2/Mean_L1 0.00126
+wandb:       val/t2/Mean_L2 0.84111
+wandb:      val/t2/Mean_MSE 0.81052
+wandb:     val/t2/Median_L1 0.00159
+wandb:     val/t2/Median_L2 0.03027
+wandb:    val/t2/Median_MSE 0.03549
+wandb:      val/t2/Poly_MMD 0.18737
+wandb:       val/t2/RBF_MMD 0.15495
+wandb: val/t3/1-Wasserstein 0.03991
+wandb: val/t3/2-Wasserstein 0.0358
+wandb:    val/t3/Linear_MMD 0.81852
+wandb:       val/t3/Mean_L1 0.00252
+wandb:       val/t3/Mean_L2 0.03933
+wandb:      val/t3/Mean_MSE 0.04577
+wandb:     val/t3/Median_L1 1.01403
+wandb:     val/t3/Median_L2 0.04363
+wandb:    val/t3/Median_MSE 0.05018
+wandb:      val/t3/Poly_MMD 0.84075
+wandb:       val/t3/RBF_MMD 0.00209
+wandb: val/t4/1-Wasserstein 1.05499
+wandb: val/t4/2-Wasserstein 0.02102
+wandb:    val/t4/Linear_MMD 0.12014
+wandb:       val/t4/Mean_L2 0.11103
+wandb:      val/t4/Mean_MSE 0.12944
+wandb:      val/t4/Poly_MMD 0.10078
+wandb:       val/t4/RBF_MMD 0.02424
+wandb: 
+wandb: 🚀 View run noble-firebrand-2 at: https://wandb.ai/allepalma/1_OFFICIAL_cfm_eb_latent_geodesic_leaveout/runs/1hye855c
+wandb: Synced 6 W&B file(s), 0 media file(s), 1 artifact file(s) and 0 other file(s)
+wandb: Find logs at: /home/icb/alessandro.palma/environment/scCFM/project_dir/experiments/1_OFFICIAL_cfm_eb_latent_geodesic_LEAVEOUT/wandb/run-20230924_214008-1hye855c/logs
+Exception in thread IntMsgThr:
+Traceback (most recent call last):
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/wandb_run.py", line 299, in check_internal_messages
+    self._loop_check_status(
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/wandb_run.py", line 223, in _loop_check_status
+    local_handle = request()
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/interface/interface.py", line 743, in deliver_internal_messages
+    return self._deliver_internal_messages(internal_message)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/interface/interface_shared.py", line 472, in _deliver_internal_messages
+    return self._deliver_record(record)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/interface/interface_shared.py", line 425, in _deliver_record
+    handle = mailbox._deliver_record(record, interface=self)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/lib/mailbox.py", line 455, in _deliver_record
+    interface._publish(record)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/interface/interface_sock.py", line 51, in _publish
+    self._sock_client.send_record_publish(record)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/lib/sock_client.py", line 221, in send_record_publish
+    self.send_server_request(server_req)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/lib/sock_client.py", line 155, in send_server_request
+    self._send_message(msg)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/lib/sock_client.py", line 152, in _send_message
+    self._sendall_with_error_handle(header + data)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/wandb/sdk/lib/sock_client.py", line 130, in _sendall_with_error_handle
+    sent = self._sock.send(data)
+BrokenPipeError: [Errno 32] Broken pipe

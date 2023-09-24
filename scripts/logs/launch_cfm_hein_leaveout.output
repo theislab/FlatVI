@@ -1,7 +1,7 @@
-[2023-09-23 15:35:24,107][HYDRA] Submitit 'slurm' sweep output dir : multirun/2023-09-23/15-35-23
-[2023-09-23 15:35:24,110][HYDRA] 	#0 : model.leaveout_timepoint=1 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
-[2023-09-23 15:35:24,116][HYDRA] 	#1 : model.leaveout_timepoint=2 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
-[2023-09-23 15:35:24,123][HYDRA] 	#2 : model.leaveout_timepoint=3 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
-[2023-09-23 15:35:24,129][HYDRA] 	#3 : model.leaveout_timepoint=4 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
-[2023-09-23 15:35:24,134][HYDRA] 	#4 : model.leaveout_timepoint=5 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
-[2023-09-23 15:35:24,140][HYDRA] 	#5 : model.leaveout_timepoint=6 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,213][HYDRA] Submitit 'slurm' sweep output dir : multirun/2023-09-24/21-34-17
+[2023-09-24 21:34:18,214][HYDRA] 	#0 : model.leaveout_timepoint=1 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,220][HYDRA] 	#1 : model.leaveout_timepoint=2 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,227][HYDRA] 	#2 : model.leaveout_timepoint=3 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,233][HYDRA] 	#3 : model.leaveout_timepoint=4 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,238][HYDRA] 	#4 : model.leaveout_timepoint=5 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout
+[2023-09-24 21:34:18,244][HYDRA] 	#5 : model.leaveout_timepoint=6 hydra=CFM_hein_geodesic_leaveout datamodule=CFM_hein_geodesic_leaveout logger=CFM_hein_geodesic_leaveout train=CFM_hein_geodesic_leaveout

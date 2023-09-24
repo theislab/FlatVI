@@ -1,0 +1,5 @@
+- model.leaveout_timepoint=2
+- hydra=CFM_eb_geodesic_leaveout
+- datamodule=CFM_eb_geodesic_leaveout
+- logger=CFM_eb_geodesic_leaveout
+- train=CFM_eb_geodesic_leaveout
