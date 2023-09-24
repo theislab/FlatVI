@@ -1,0 +1,5 @@
+- model.leaveout_timepoint=38
+- hydra=CFM_schiebinger_geodesic_leaveout
+- datamodule=CFM_schiebinger_geodesic_leaveout
+- logger=CFM_schiebinger_geodesic_leaveout
+- train=CFM_schiebinger_geodesic_leaveout

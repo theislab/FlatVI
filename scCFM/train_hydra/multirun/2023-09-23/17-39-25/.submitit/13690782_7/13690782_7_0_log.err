@@ -1,0 +1,76 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1695506810.751830 3963075 tfrt_cpu_pjrt_client.cc:349] TfrtCpuClient created.
+No GPU/TPU found, falling back to CPU. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/scvi/_settings.py:63: UserWarning: Since v1.0.0, scvi-tools no longer uses a random seed by default. Run `scvi.settings.seed = 0` to reproduce results from previous versions.
+  self.seed = seed
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/scvi/_settings.py:70: UserWarning: Setting `dl_pin_memory_gpu_training` is deprecated in v1.0 and will be removed in v1.1. Please pass in `pin_memory` to the data loaders instead.
+  self.dl_pin_memory_gpu_training = (
+wandb: Currently logged in as: allepalma. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.15.11 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.10
+wandb: Run data is saved locally in /home/icb/alessandro.palma/environment/scCFM/project_dir/experiments/4_OFFICIAL_cfm_schiebinger_latent_geodesic_LEAVEOUT/wandb/run-20230924_000800-baia2tzt
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run laced-paper-8
+wandb: ⭐️ View project at https://wandb.ai/allepalma/4_OFFICIAL_cfm_schiebinger_latent_geodesic_leaveout
+wandb: 🚀 View run at https://wandb.ai/allepalma/4_OFFICIAL_cfm_schiebinger_latent_geodesic_leaveout/runs/baia2tzt
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA A100-PCIE-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:617: UserWarning: Checkpoint directory /lustre/groups/ml01/workspace/alessandro.palma/scCFM/experiments/4_OFFICIAL_cfm_schiebinger_latent_geodesic_LEAVEOUT/checkpoints exists and is not empty.
+  rank_zero_warn(f"Checkpoint directory {dirpath} exists and is not empty.")
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+  | Name      | Type      | Params
+----------------------------------------
+0 | net       | MLP       | 9.9 K 
+1 | node      | NeuralODE | 9.9 K 
+2 | criterion | MSELoss   | 0     
+----------------------------------------
+9.9 K     Trainable params
+0         Non-trainable params
+9.9 K     Total params
+0.039     Total estimated model params size (MB)
+SLURM auto-requeueing enabled. Setting signal handlers.
+/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:442: PossibleUserWarning: The dataloader, val_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 128 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+  rank_zero_warn(
+Traceback (most recent call last):
+  File "/home/icb/alessandro.palma/environment/scCFM/scCFM/train_hydra/utils/exceptions.py", line 11, in __call__
+    return self.f(*args, **kwargs)
+  File "/home/icb/alessandro.palma/environment/scCFM/scCFM/train_hydra/train_cfm.py", line 119, in main
+    trainer.fit(model=model,
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 532, in fit
+    call._call_and_handle_interrupt(
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 43, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 571, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 980, in _run
+    results = self._run_stage()
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1021, in _run_stage
+    self._run_sanity_check()
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/trainer.py", line 1050, in _run_sanity_check
+    val_loop.run()
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/loops/utilities.py", line 181, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 115, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 376, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_kwargs.values())
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/trainer/call.py", line 294, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/home/icb/alessandro.palma/miniconda3/envs/scCFM/lib/python3.10/site-packages/pytorch_lightning/strategies/strategy.py", line 393, in validation_step
+    return self.model.validation_step(*args, **kwargs)
+  File "/home/icb/alessandro.palma/environment/scCFM/scCFM/models/cfm/cfm_module.py", line 245, in validation_step
+    loss = self.step(batch, training=False)
+  File "/home/icb/alessandro.palma/environment/scCFM/scCFM/models/cfm/cfm_module.py", line 229, in step
+    t, xt, ut = self.preprocess_batch(X)
+  File "/home/icb/alessandro.palma/environment/scCFM/scCFM/models/cfm/cfm_module.py", line 202, in preprocess_batch
+    x1 = X[:, t_next, :]
+IndexError: index 39 is out of bounds for dimension 1 with size 39
+wandb: Waiting for W&B process to finish... (success).
+wandb: 🚀 View run laced-paper-8 at: https://wandb.ai/allepalma/4_OFFICIAL_cfm_schiebinger_latent_geodesic_leaveout/runs/baia2tzt
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: /home/icb/alessandro.palma/environment/scCFM/project_dir/experiments/4_OFFICIAL_cfm_schiebinger_latent_geodesic_LEAVEOUT/wandb/run-20230924_000800-baia2tzt/logs

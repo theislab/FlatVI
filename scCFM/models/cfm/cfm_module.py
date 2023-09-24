@@ -244,6 +244,7 @@ class CFMLitModule(LightningModule):
         # Reset the state before the next epoch
         loss = self.step(batch, training=False)
         self.log("val/loss", loss)
+        self.log("leaveout_timepoint", self.leaveout_timepoint)
         self.state.append(self.unpack_batch(batch).cpu())
 
     def on_validation_epoch_end(self):

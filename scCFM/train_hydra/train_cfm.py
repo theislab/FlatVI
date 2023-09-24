@@ -67,6 +67,7 @@ def main(config: DictConfig):
                         use_real_time=config.model.use_real_time,
                         antithetic_time_sampling=config.model.antithetic_time_sampling, 
                         leaveout_timepoint=config.model.leaveout_timepoint) 
+
         
     # Initialize callbacks 
     model_ckpt_callbacks = ModelCheckpoint(dirpath=current_experiment_dir / "checkpoints", 

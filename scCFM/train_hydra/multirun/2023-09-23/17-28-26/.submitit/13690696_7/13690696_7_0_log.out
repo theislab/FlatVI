@@ -1,0 +1,6 @@
+submitit INFO (2023-09-24 17:26:54,435) - Starting with JobEnvironment(job_id=13690696_7, hostname=supergpu03.scidom.de, local_rank=0(1), node=0(1), global_rank=0(1))
+submitit INFO (2023-09-24 17:26:54,436) - Loading pickle: /home/icb/alessandro.palma/environment/scCFM/scCFM/train_hydra/multirun/2023-09-23/17-28-26/.submitit/13690696_7/13690696_7_submitted.pkl
+Sanity Checking: 0it [00:00, ?it/s]Sanity Checking:   0%|          | 0/2 [00:00<?, ?it/s]Sanity Checking DataLoader 0:   0%|          | 0/2 [00:00<?, ?it/s]submitit INFO (2023-09-24 17:30:21,917) - Job completed successfully
+[2023-09-24 17:30:21,917][submitit][INFO] - Job completed successfully
+submitit INFO (2023-09-24 17:30:21,925) - Exitting after successful completion
+[2023-09-24 17:30:21,925][submitit][INFO] - Exitting after successful completion

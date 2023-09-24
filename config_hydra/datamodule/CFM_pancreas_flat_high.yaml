@@ -1,4 +1,4 @@
-path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/pancreas/flat/pancreas_flat_lib_high_d.h5ad
+path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/pancreas/flat/pancreas_flat_lib_30.h5ad
 x_layer: X_latents
 time_key: experimental_time
 use_pca: False

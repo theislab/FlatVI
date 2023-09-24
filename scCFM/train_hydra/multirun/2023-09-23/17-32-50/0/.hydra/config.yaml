@@ -1,0 +1,58 @@
+datamodule:
+  path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/schiebinger_et_al/flat/schiebinger_et_al_geodesic_lib.h5ad
+  x_layer: X_latents
+  time_key: experimental_time
+  use_pca: false
+  n_dimensions: null
+  train_val_test_split:
+  - 0.7
+  - 0.3
+  batch_size: 256
+  num_workers: 2
+  model_library_size: true
+checkpoint:
+  filename: epoch_{epoch:04d}
+  monitor: val/loss
+  mode: min
+  save_last: false
+  auto_insert_metric_name: false
+early_stopping:
+  perform_early_stopping: false
+  monitor: train/loss
+  patience: 200
+  mode: min
+  min_delta: 0.0
+  verbose: false
+  strict: true
+  check_finite: true
+  stopping_threshold: null
+  divergence_threshold: null
+  check_on_train_epoch_end: null
+logger:
+  offline: false
+  id: null
+  project: 4_OFFICIAL_cfm_schiebinger_latent_geodesic_leaveout
+  log_model: true
+  prefix: ''
+  group: ''
+  tags: []
+  job_type: ''
+model:
+  ot_sampler: exact
+  sigma: 0.1
+  use_real_time: false
+  lr: 0.001
+  antithetic_time_sampling: false
+  leaveout_timepoint: 2
+net:
+  w: 64
+  time_varying: true
+train:
+  task_name: 4_OFFICIAL_cfm_schiebinger_latent_geodesic_LEAVEOUT
+  seed: 42
+trainer:
+  max_epochs: null
+  max_steps: 20000
+  accelerator: gpu
+  devices: 1
+  log_every_n_steps: 50

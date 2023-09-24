@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import sklearn
 import torch
 import cellrank as cr
 from torchdyn.core import NeuralODE
@@ -294,13 +295,18 @@ def decode_trajectory_single_step(X_0,
                                     t_0,
                                     temporal_model,
                                     vae, 
-                                    model_library_size=True):
+                                    model_library_size=True, 
+                                    model_type="scvi"):
     """
     Compute trajectory given the model 
     """
     # Node for push forward
     node = NeuralODE(
-        torch_wrapper(temporal_model.net), solver="dopri5", sensitivity="adjoint", atol=1e-4, rtol=1e-4
+        torch_wrapper(temporal_model.net),
+        solver="dopri5", 
+        sensitivity="adjoint", 
+        atol=1e-4, 
+        rtol=1e-4
         )
     
     # Add library size to the state 
@@ -308,25 +314,121 @@ def decode_trajectory_single_step(X_0,
         l_0 = l_0 if len(l_0.shape)==2 else l_0.unsqueeze(1)
         X_0 = torch.cat([X_0, l_0], dim=1)   
     
+    # Integrate through time
     with torch.no_grad():
-        # Integrate through time
+        # Initial state
         X_t = X_0
+        # Integrate a single step
         time_range = torch.linspace(t_0, t_0+1, 1000)
         traj = node.trajectory(X_t.float().to(vae.device),
                                 t_span=time_range)
-        mu_traj, x_traj = decode_state_lib_traj(vae, traj[-1], model_library_size)
-
+        mu_traj, x_traj = decode_state_lib_traj(vae, traj[-1], model_library_size, model_type)
     return mu_traj, x_traj, traj[-1]
 
-def decode_state_lib_traj(model, X_t, model_library_size):
+def decode_state_lib_traj(model, X_t, model_library_size, model_type):
     """Perform decoding at a trajectory snapshot
     """
-    if model_library_size:
+    if model_library_size and model_type!="geodesic_ae":
         mu_t_hat = F.softmax(model.decode(X_t[:, :-1]), dim=1)
         l_t_hat = torch.exp(X_t[:, -1])
         mu_t_hat = mu_t_hat * l_t_hat.unsqueeze(-1)
         X_t_hat = model.sample_decoder(X_t[:, :-1], l_t_hat).detach().cpu()
+    elif model_type=="geodesic_ae":
+        mu_t_hat = model.decode(X_t[:, :-1]).detach().cpu()
+        X_t_hat = copy.deepcopy(mu_t_hat)
     else:
         mu_t_hat = torch.exp(model.decode(X_t))
         X_t_hat = model.sample_decoder(X_t).detach().cpu()
     return mu_t_hat.detach().cpu(), X_t_hat
+
+def compute_pairwise_distance(data_x, data_y=None):
+    """
+    Args:
+        data_x: numpy.ndarray([N, feature_dim], dtype=np.float32)
+        data_y: numpy.ndarray([N, feature_dim], dtype=np.float32)
+    Returns:
+        numpy.ndarray([N, N], dtype=np.float32) of pairwise distances.
+    """
+    if data_y is None:
+        data_y = data_x
+    dists = sklearn.metrics.pairwise_distances(
+        data_x, data_y, metric='euclidean', n_jobs=8)
+    return dists
+
+
+def get_kth_value(unsorted, k, axis=-1):
+    """
+    Args:
+        unsorted: numpy.ndarray of any dimensionality.
+        k: int
+    Returns:
+        kth values along the designated axis.
+    """
+    # Take only K nearest neighbors and the radius is the maximum of the knn distances 
+    indices = np.argpartition(unsorted, k, axis=axis)[..., :k]
+    k_smallests = np.take_along_axis(unsorted, indices, axis=axis)
+    kth_values = k_smallests.max(axis=axis)
+    return kth_values
+
+
+def compute_nearest_neighbour_distances(input_features, nearest_k):
+    """
+    Args:
+        input_features: numpy.ndarray([N, feature_dim], dtype=np.float32)
+        nearest_k: int
+    Returns:
+        Distances to kth nearest neighbours.
+    """
+    distances = compute_pairwise_distance(input_features)
+    radii = get_kth_value(distances, k=nearest_k + 1, axis=-1)
+    return radii
+
+
+def compute_prdc(real_features, fake_features, nearest_k):
+    """
+    Computes precision, recall, density, and coverage given two manifolds.
+    Args:
+        real_features: numpy.ndarray([N, feature_dim], dtype=np.float32)
+        fake_features: numpy.ndarray([N, feature_dim], dtype=np.float32)
+        nearest_k: int.
+    Returns:
+        dict of precision, recall, density, and coverage.
+    """
+    real_nearest_neighbour_distances = compute_nearest_neighbour_distances(
+        real_features, nearest_k)
+    fake_nearest_neighbour_distances = compute_nearest_neighbour_distances(
+        fake_features, nearest_k)
+    distance_real_fake = compute_pairwise_distance(
+        real_features, fake_features)
+
+    precision = (
+            distance_real_fake <
+            np.expand_dims(real_nearest_neighbour_distances, axis=1)
+    ).any(axis=0).mean()
+
+    recall = (
+            distance_real_fake <
+            np.expand_dims(fake_nearest_neighbour_distances, axis=0)
+    ).any(axis=1).mean()
+
+    density = (1. / float(nearest_k)) * (
+            distance_real_fake <
+            np.expand_dims(real_nearest_neighbour_distances, axis=1)
+    ).sum(axis=0).mean()
+
+    coverage = (
+            distance_real_fake.min(axis=1) <
+            real_nearest_neighbour_distances
+    ).mean()
+
+    return dict(precision=precision, 
+                recall=recall,
+                density=density, 
+                coverage=coverage)
+
+def standardize(tensor):
+    """
+    Standardize tensor across the rows
+    """
+    tensor = (tensor - tensor.mean(0)) / (tensor.std(0)+1e-6)
+    return tensor

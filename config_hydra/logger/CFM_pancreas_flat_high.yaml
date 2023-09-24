@@ -1,6 +1,6 @@
 offline: False
 id: null # pass correct id to resume experiment!
-project: 3_OFFICIAL_cfm_pancreas_latent_flat_high_d
+project: 3_OFFICIAL_cfm_pancreas_latent_flat_30
 log_model: True # upload lightning ckpts
 prefix: "" # a string to put at the beginning of metric keys
 group: ""
