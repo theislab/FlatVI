@@ -78,7 +78,7 @@ fixed:
     trainer.max_steps: 20000
     trainer.accelerator: gpu
     trainer.devices: 1
-    trainer.log_every_n_steps: 50
+    trainer.log_every_n_steps: 5
 
 grid:
   model.leaveout_timepoint: 
