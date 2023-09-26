@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_vae.py
-  name: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_high_d
+  name: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_30
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_high_d
+  training.task_name: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_30
   training.seed: 42
 
   # Datamodule hyperparameters 
@@ -42,7 +42,7 @@ fixed:
   model.dropout_p: False
   model.model_library_size: True
   model.batch_norm: True
-  model.hidden_dims: [256, 20]
+  model.hidden_dims: [256, 30]
   model.kl_warmup_fraction: 2
 
   # Geometric VAE version
@@ -77,7 +77,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_high_d
+  logger.project: 3_OFFICIAL_sweep_lib_deep_vae_pancreas_30
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""

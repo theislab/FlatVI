@@ -144,7 +144,7 @@ class BaseAutoencoder(pl.LightningModule):
                         'interval': 'epoch',
                         'frequency': 1,
                         'threshold': 0.001,
-                        'min_lr': 0.0001
+                        'min_lr': 0.005
                         }
         return [optimizer], [scheduler]
 

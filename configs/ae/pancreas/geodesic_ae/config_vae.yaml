@@ -33,7 +33,7 @@ fixed:
   datamodule.num_workers: 2
 
   # Model
-  model.hidden_dims: [256, 10]
+  model.hidden_dims: [256, 20]
   model.batch_norm: True
   model.dropout: False
   model.dropout_p: False

@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_cfm.py
-  name: 4_OFFICIAL_cfm_schiebinger_latent_vae
+  name: 4_OFFICIAL_cfm_schiebinger_latent_vae_LEAVEOUT
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
     # General hparameters 
-    training.task_name: 4_OFFICIAL_cfm_schiebinger_latent_vae
+    training.task_name: 4_OFFICIAL_cfm_schiebinger_latent_vae_LEAVEOUT
     training.seed: 42
 
     # Datamodule hyperparameters 
@@ -28,7 +28,7 @@ fixed:
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
     datamodule.n_dimensions: Null
-    datamodule.train_val_test_split: [0.90, 0.1]
+    datamodule.train_val_test_split: [0.75, 0.25]
     datamodule.num_workers: 2
     datamodule.batch_size: 256
     datamodule.model_library_size: True
@@ -66,7 +66,7 @@ fixed:
     # Logger 
     logger.offline: False
     logger.id: null # pass correct id to resume experiment!
-    logger.project: 4_OFFICIAL_cfm_schiebinger_latent_vae
+    logger.project: 4_OFFICIAL_cfm_schiebinger_latent_vae_LEAVEOUT
     logger.log_model: True # upload lightning ckpts
     logger.prefix: "" # a string to put at the beginning of metric keys
     logger.group: ""
@@ -75,7 +75,20 @@ fixed:
 
     # Trainer
     trainer.max_epochs: Null
-    trainer.max_steps: 50000
+    trainer.max_steps: 20000
     trainer.accelerator: gpu
     trainer.devices: 1
     trainer.log_every_n_steps: 50
+
+grid:
+  model.leaveout_timepoint: 
+    type: choice
+    options:
+      - 2
+      - 5
+      - 10
+      - 15
+      - 20
+      - 25
+      - 30
+      - 38

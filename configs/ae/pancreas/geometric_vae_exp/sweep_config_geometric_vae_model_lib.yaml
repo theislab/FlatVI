@@ -1,6 +1,6 @@
 seml:
   executable: ../scCFM/train_vae.py
-  name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
+  name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_30
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,7 +19,7 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
+  training.task_name: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_30
   training.seed: 42
 
   # Datamodule hyperparameters 
@@ -42,7 +42,7 @@ fixed:
   model.dropout_p: False
   model.model_library_size: True
   model.batch_norm: True
-  model.hidden_dims: [256, 20]
+  model.hidden_dims: [256, 30]
   model.kl_warmup_fraction: 2
 
   # Geometric VAE version
@@ -53,11 +53,11 @@ fixed:
   geometric_vae.interpolate_z: False
   geometric_vae.start_jac_after: 0
   geometric_vae.detach_theta: False
-  geometric_vae.fl_weight: 1
-  geometric_vae.anneal_fl_weight: True
-  geometric_vae.max_fl_weight: 10
-  geometric_vae.n_epochs_anneal_fl: 500
-  geometric_vae.fl_anneal_fraction: 0.5
+  # geometric_vae.fl_weight: 1
+  geometric_vae.anneal_fl_weight: False
+  geometric_vae.max_fl_weight: Null
+  geometric_vae.n_epochs_anneal_fl: Null
+  geometric_vae.fl_anneal_fraction: Null
   
 
   # Callbacks 
@@ -82,7 +82,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_high_d
+  logger.project: 3_OFFICIAL_sweep_lib_deep_geometric_pancreas_30
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""
@@ -94,3 +94,11 @@ fixed:
   trainer.accelerator: gpu
   trainer.devices: 1
   trainer.log_every_n_steps: 10
+
+grid:
+  geometric_vae.fl_weight: 
+    type: choice
+    options:
+      - 0.01
+      - 0.1
+      - 1
