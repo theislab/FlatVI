@@ -90,8 +90,9 @@ def real_reconstructed_cells_adata(model,
                 
                 else:
                     real_cells.append(torch.log1p(batch["X"].cpu()))
-                    recons_cells.append(model.decode(z).cpu())
-                    recons_cells_mu.append(copy.deepcopy(recons_cells[-1]))
+                    decoded_output = model.decode(z).cpu()
+                    recons_cells.append(decoded_output)
+                    recons_cells_mu.append(decoded_output)
     
     # Concatenate the results 
     zs = torch.cat(zs, dim=0).cpu().numpy()
@@ -325,7 +326,7 @@ def decode_trajectory_single_step(X_0,
         mu_traj, x_traj = decode_state_lib_traj(vae, traj[-1], model_library_size, model_type)
     return mu_traj, x_traj, traj[-1]
 
-def decode_state_lib_traj(model, X_t, model_library_size, model_type):
+def decode_state_lib_traj(model, X_t, model_library_size, model_type="vae"):
     """Perform decoding at a trajectory snapshot
     """
     if model_library_size and model_type!="geodesic_ae":

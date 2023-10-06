@@ -1,6 +1,9 @@
 import torch 
 from scCFM.models.utils import get_distribution
 from scCFM.models.manifold.utils import nb_kl
+# from torchmetrics import PearsonCorrCoef, SpearmanCorrCoef
+
+# corrcoef = SpearmanCorrCoef()
 
 def get_condition_number(J):
     """Condition number
@@ -13,7 +16,8 @@ def get_condition_number(J):
     """
     # Eigenvalues 
     S = torch.svd(J).S
-    # Largest over lowe eigenvalue
+    
+    # Largest over lower eigenvalue
     scores = S.max(1).values/S.min(1).values
     return scores 
         
@@ -64,25 +68,32 @@ def get_euclidean_to_kl_ratio(z_batch, decoded_outputs, model):
     z_permuted = z_batch[random_perm]
     decoded_outputs_permuted = {key: value[random_perm] for key, value in decoded_outputs.items()}
     # Euclidean latent 
-    euclidean_dist_latent = torch.sum((z_permuted - z_batch)**2, dim=-1)
+    euclidean_dist_latent = torch.sum((z_permuted - z_batch)**2, dim=-1).detach().cpu()
     # KL true 
     if model.likelihood == "nb":
         distr_batch = get_distribution(decoded_outputs, model.theta, likelihood=model.likelihood)
         distr_perm = get_distribution(decoded_outputs_permuted, model.theta, likelihood=model.likelihood)
-        kl_dist = nb_kl(distr_batch, distr_perm).sum(-1)
+        kl_dist = nb_kl(distr_batch, distr_perm).sum(-1).detach().cpu()
     else:
         raise NotImplementedError
-    # Difference KL and latent Euclidean distances 
     return torch.mean(torch.abs(euclidean_dist_latent - kl_dist))
     
-def compute_all_metrics(J, z_batch, decoded_outputs, model):
+def compute_all_metrics(J, z_batch, decoded_outputs, model, average=True):
+    model.train()
     cn = get_condition_number(J)
     var = get_variance(J)
     mf = get_magnification_factor(J)
     eu_kl_dist = get_euclidean_to_kl_ratio(z_batch, decoded_outputs, model)
     
-    dict_metrics = {"condition_number": cn.mean(),
-                       "variance": var.mean(),
-                       "magnification_factor": mf.mean(), 
-                       "eu_kl_dist": eu_kl_dist.mean()}
+    if average:
+        dict_metrics = {"condition_number": cn.mean(),
+                        "variance": var.mean(),
+                        "magnification_factor": mf.mean(), 
+                        "eu_kl_dist": eu_kl_dist.mean()}
+    else:
+        dict_metrics = {"condition_number": cn,
+                "variance": var,
+                "magnification_factor": mf, 
+                "eu_kl_dist": eu_kl_dist}
+    model.eval()
     return dict_metrics

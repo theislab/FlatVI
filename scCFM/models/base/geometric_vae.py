@@ -341,7 +341,7 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
             fl_weight = min([self.fl_weight, self.max_fl_weight])
         else:
             fl_weight = self.fl_weight
-        
+                    
         # Loss function
         if self.fl_weight == 0 or self.n_epochs_so_far < self.start_jac_after:
             loss = torch.mean(recon_loss + kl_weight * kl_div)
