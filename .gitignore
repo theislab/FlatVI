@@ -28,7 +28,7 @@ share/python-wheels/
 MANIFEST
 
 # Directories
-project_folder
+project_dir
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

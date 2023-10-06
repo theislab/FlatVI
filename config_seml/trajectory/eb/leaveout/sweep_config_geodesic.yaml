@@ -1,6 +1,6 @@
 seml:
   executable: /nfs/homedirs/pala/scCFM/scCFM/train_seml/train_cfm.py
-  name: 1_OFFICIAL_cfm_eb_latent_vae_LEAVEOUT3
+  name: 1_OFFICIAL_cfm_eb_latent_geodesic_LEAVEOUT3
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
   project_root_dir: /nfs/homedirs/pala/scCFM/
@@ -19,11 +19,11 @@ slurm:
 
 fixed: 
     # General hparameters 
-    training.task_name: 1_OFFICIAL_cfm_eb_latent_vae_LEAVEOUT
+    training.task_name: 1_OFFICIAL_cfm_eb_latent_geodesic_leaveout
     training.seed: 42
 
     # Datamodule hyperparameters 
-    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/flat/eb_lib.h5ad
+    datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/flat/eb_geodesic.h5ad
     datamodule.x_layer: X_latents
     datamodule.time_key: experimental_time
     datamodule.use_pca: False
@@ -66,7 +66,7 @@ fixed:
     # Logger 
     logger.offline: False
     logger.id: null # pass correct id to resume experiment!
-    logger.project: 1_OFFICIAL_cfm_eb_latent_vae_LEAVEOUT
+    logger.project: 1_OFFICIAL_cfm_eb_latent_geodesic_leaveout
     logger.log_model: True # upload lightning ckpts
     logger.prefix: "" # a string to put at the beginning of metric keys
     logger.group: ""
