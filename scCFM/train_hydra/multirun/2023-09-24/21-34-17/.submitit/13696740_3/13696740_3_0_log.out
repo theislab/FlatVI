@@ -1,6 +1,0 @@
-submitit INFO (2023-09-24 21:35:07,945) - Starting with JobEnvironment(job_id=13696740_3, hostname=gpusrv49.scidom.de, local_rank=0(1), node=0(1), global_rank=0(1))
-submitit INFO (2023-09-24 21:35:07,946) - Loading pickle: /home/icb/alessandro.palma/environment/scCFM/scCFM/train_hydra/multirun/2023-09-24/21-34-17/.submitit/13696740_3/13696740_3_submitted.pkl
-submitit INFO (2023-09-24 21:35:33,237) - Job completed successfully
-[2023-09-24 21:35:33,237][submitit][INFO] - Job completed successfully
-submitit INFO (2023-09-24 21:35:33,246) - Exitting after successful completion
-[2023-09-24 21:35:33,246][submitit][INFO] - Exitting after successful completion

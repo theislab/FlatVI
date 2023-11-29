@@ -1,5 +1,0 @@
-- model.leaveout_timepoint=1
-- hydra=CFM_hein_geodesic_leaveout
-- datamodule=CFM_hein_geodesic_leaveout
-- logger=CFM_hein_geodesic_leaveout
-- train=CFM_hein_geodesic_leaveout

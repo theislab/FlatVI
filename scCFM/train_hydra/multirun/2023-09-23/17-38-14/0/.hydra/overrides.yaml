@@ -1,5 +1,0 @@
-- model.leaveout_timepoint=2
-- hydra=CFM_schiebinger_leaveout
-- datamodule=CFM_schiebinger_leaveout
-- logger=CFM_schiebinger_leaveout
-- train=CFM_schiebinger_leaveout

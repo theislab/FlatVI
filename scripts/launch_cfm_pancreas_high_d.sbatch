@@ -10,7 +10,7 @@
 
 #SBATCH --gres=gpu:1
 
-#SBATCH --qos=gpu_normal
+#SBATCH --qos=gpu_long
 
 #SBATCH -c 4
 
