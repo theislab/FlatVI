@@ -1,9 +1,9 @@
 seml:
-  executable: ../scCFM/train_vae.py
-  name: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger
+  executable: /nfs/homedirs/pala/scCFM/scCFM/train_seml/train_vae.py
+  name: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger_small
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
-  project_root_dir: ../../../../scCFM
+  project_root_dir: /nfs/homedirs/pala/scCFM/scCFM/
 
 slurm:
   max_simultaneous_jobs: 5
@@ -19,11 +19,11 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger
+  training.task_name: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger_small
   training.seed: 42
 
   # Datamodule hyperparameters 
-  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/schiebinger_et_al/processed/schiebinger_et_al.h5ad
+  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/schiebinger_et_al/processed/schiebinger_et_al_small.h5ad
   datamodule.x_layer: X_norm
   datamodule.cond_keys: experimental_time
   datamodule.use_pca: False
@@ -34,7 +34,7 @@ fixed:
 
   # Model
   model.model_type: vae
-  model.n_epochs_anneal_kl: 1000
+  model.n_epochs_anneal_kl: 500
   model.kl_weight: Null
   model.likelihood: nb
   model.dropout: False
@@ -77,7 +77,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger
+  logger.project: 4_OFFICIAL_sweep_lib_deep_vae_schiebinger_small
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""

@@ -1,5 +1,5 @@
 seml:
-  executable: /nfs/homedirs/pala/scCFM/scCFM/train_seml/train_cfm.py
+  executable:  /nfs/homedirs/pala/scCFM/scCFM/train_seml/train_cfm.py
   name: 1_OFFICIAL_cfm_eb_latent_flat_LEAVEOUT2
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM

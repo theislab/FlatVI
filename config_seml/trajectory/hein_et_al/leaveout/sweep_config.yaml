@@ -1,12 +1,12 @@
 seml:
-  executable: ../scCFM/train_cfm.py
-  name: 2_OFFICIAL_cfm_hein_latent_vae_LEAVEOUT
+  executable: /nfs/homedirs/pala/scCFM/scCFM/train_seml/train_cfm.py
+  name: 2_OFFICIAL_cfm_hein_latent_vae_LEAVEOUT3
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/eb_cfm/logs/
   conda_environment: scCFM
-  project_root_dir: ../../../../scCFM
+  project_root_dir: /nfs/homedirs/pala/scCFM/
 
 slurm:
-  max_simultaneous_jobs: 1
+  max_simultaneous_jobs: 2
   experiments_per_job: 1
   sbatch_options_template: GPU
   sbatch_options:
