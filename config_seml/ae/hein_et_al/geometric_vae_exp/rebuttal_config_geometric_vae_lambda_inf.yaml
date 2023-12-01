@@ -23,7 +23,7 @@ fixed:
   training.seed: 42
 
   # Datamodule hyperparameters 
-  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/processed/unperturbed_time_course_host.h5ad
+  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/hein_et_al/processed/unperturbed_time_course_host.h5ad
   datamodule.x_layer: X_norm
   datamodule.cond_keys: experimental_time
   datamodule.use_pca: False

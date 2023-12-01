@@ -33,7 +33,7 @@ fixed:
   datamodule.num_workers: 2
 
   # Model
-  model.model_type: rebuttal_lambda_inf_schiebinger
+  model.model_type: geometric_vae
   model.n_epochs_anneal_kl: 200
   model.kl_weight: Null
   model.likelihood: nb
