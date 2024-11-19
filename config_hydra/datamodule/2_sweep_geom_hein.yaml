@@ -1,0 +1,8 @@
+path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/hein_et_al/processed/unperturbed_time_course_host.h5ad
+x_layer: X_norm
+cond_keys: experimental_time
+use_pca: False
+n_dimensions: Null
+train_val_test_split: [0.90, 0.1]
+batch_size: 32
+num_workers: 2

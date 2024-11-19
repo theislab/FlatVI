@@ -3,14 +3,15 @@
 # Default configurations
 defaults:
   - _self_
-  - hydra: default
-  - datamodule: CFM_pancreas_flat_high
-  - checkpoint: default
-  - early_stopping: default
-  - logger: CFM_pancreas_flat_high
-  - model: default
-  - net: default
-  - train: CFM_pancreas_flat_high
-  - trainer: default
+  - hydra: geom_vae
+  - datamodule: 1_sweep_geom_eb
+  - checkpoint: geom_vae
+  - early_stopping: geom_vae
+  - logger: 1_sweep_geom_eb
+  - model: geom_vae
+  - net: null
+  - train: 1_sweep_geom_eb
+  - trainer: geom_vae
   - launcher: slurm_cluster
   - hparams_search: null
+  - geometric_vae: null

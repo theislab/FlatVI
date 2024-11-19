@@ -1,0 +1,6 @@
+ot_sampler: exact
+sigma: 0.1
+use_real_time: False
+lr: 0.001
+antithetic_time_sampling: False
+leaveout_timepoint: -1

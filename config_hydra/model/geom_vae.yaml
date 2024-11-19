@@ -1,0 +1,12 @@
+# Model
+model_type: geometric_vae
+n_epochs_anneal_kl: 500
+kl_weight: Null
+likelihood: nb
+dropout: False
+learning_rate: 0.001
+dropout_p: False
+model_library_size: True
+batch_norm: True
+hidden_dims: [256, 10]
+kl_warmup_fraction: 2

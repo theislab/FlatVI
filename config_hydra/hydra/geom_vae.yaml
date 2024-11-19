@@ -1,0 +1,5 @@
+run:
+  dir: ./project_dr/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+sweeper:
+  params:
+    geometric_vae.fl_weight: 0.001, 0.1, 1, 10
