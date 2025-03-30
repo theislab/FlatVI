@@ -181,7 +181,7 @@ class GeodesicAE(AE):
         dist_geo = self.dist.fit(x.cpu().numpy())
         dist_geo = torch.from_numpy(dist_geo).float().to(x.device)
         dist_emb = torch.cdist(z, z)**2
-        loss_dist = self.criterion(dist_emb,dist_geo)
+        loss_dist = self.criterion(dist_emb, dist_geo)
         
         # Total loss
         loss = recon_loss + loss_dist 

@@ -45,9 +45,10 @@ def real_reconstructed_cells_adata(model,
     Returns:
         dict: anndatas for z and concatenation of real and generated data
     """
-    # Lists containing results of encoding/decoding 
+    # Initialize the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
+    # Will contain library sizes and latent encodings 
     zs = []
     library_sizes = []
     
@@ -229,10 +230,12 @@ def decode_trajectory(X_0,
                        use_real_time, 
                        model_library_size=True, 
                        keep_time_d=False, 
-                       append_last=True):
+                       append_last=True, 
+                       model_type="vae"):
     """
     Compute trajectory given the model 
     """
+    # Start node wrapper for simulation
     node = NeuralODE(
         torch_wrapper(temporal_model.net), solver="dopri5", sensitivity="adjoint", atol=1e-4, rtol=1e-4
         )
@@ -251,7 +254,7 @@ def decode_trajectory(X_0,
     
     with torch.no_grad():
         # Collect outputs at time 0
-        mu_traj, x_traj = decode_state_lib_traj(vae, X_0, model_library_size)
+        mu_traj, x_traj = decode_state_lib_traj(vae, X_0, model_library_size, model_type=model_type)
         mu_trajs.append(mu_traj)
         x_trajs.append(x_traj)
         
@@ -264,25 +267,25 @@ def decode_trajectory(X_0,
                 times += [idx2time[t+1] for _ in range(X_t.shape[0])]
             else:
                 times += list(torch.cat([idx2time[t]+time_range for _ in range(X_t.shape[0])]))
+                
             if use_real_time:
                 traj = node.trajectory(X_t.float().to(device),
-                                            t_span=time_range,
-                                            )
+                                            t_span=time_range)
             else:
                 time_range = torch.linspace(t, t+1, 1000)
                 traj = node.trajectory(X_t.float().to(device),
-                                            t_span=time_range,
-                                            )
+                                            t_span=time_range)
+                
             if append_last: 
                 X_t = traj[-1]
-                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size)
+                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size, model_type=model_type)
                 mu_trajs.append(mu_traj)
                 x_trajs.append(x_traj)
             else:
                 to_keep = torch.linspace(0,1000,5).to(torch.int)
                 X_t = traj[:, to_keep, :]
                 X_t = X_t.view(-1, X_t.shape[-1])
-                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size)
+                mu_traj, x_traj = decode_state_lib_traj(vae, X_t, model_library_size, model_type=model_type)
                 mu_trajs.append(mu_traj)
                 x_trajs.append(x_traj)
     

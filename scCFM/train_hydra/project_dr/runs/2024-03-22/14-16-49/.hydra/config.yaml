@@ -1,0 +1,74 @@
+checkpoint:
+  filename: epoch_{epoch:04d}
+  monitor: val/lik
+  mode: min
+  save_last: true
+  auto_insert_metric_name: false
+datamodule:
+  path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/eb/processed/eb_phate.h5ad
+  x_layer: X_norm
+  cond_keys: experimental_time
+  use_pca: false
+  n_dimensions: null
+  train_val_test_split:
+  - 0.8
+  - 0.2
+  batch_size: 32
+  num_workers: 2
+early_stopping:
+  perform_early_stopping: false
+  monitor: train/loss
+  patience: 200
+  mode: min
+  min_delta: 0.0
+  verbose: false
+  strict: true
+  check_finite: true
+  stopping_threshold: null
+  divergence_threshold: null
+  check_on_train_epoch_end: null
+geometric_vae:
+  compute_metrics_every: 1
+  use_c: true
+  l2: true
+  eta_interp: 0
+  interpolate_z: false
+  start_jac_after: 0
+  detach_theta: false
+  fl_weight: 1
+  anneal_fl_weight: false
+  max_fl_weight: null
+  n_epochs_anneal_fl: null
+  fl_anneal_fraction: null
+  trainable_c: true
+logger:
+  offline: false
+  id: null
+  project: 1_sweep_geom_eb
+  log_model: true
+  prefix: ''
+  group: ''
+  tags: []
+  job_type: ''
+model:
+  model_type: geometric_vae
+  n_epochs_anneal_kl: 500
+  kl_weight: null
+  likelihood: nb
+  dropout: false
+  learning_rate: 0.001
+  dropout_p: false
+  model_library_size: true
+  batch_norm: true
+  hidden_dims:
+  - 256
+  - 10
+  kl_warmup_fraction: 2
+train:
+  task_name: 1_sweep_geom_eb
+  seed: 42
+trainer:
+  max_epochs: 500
+  accelerator: gpu
+  devices: 1
+  log_every_n_steps: 10

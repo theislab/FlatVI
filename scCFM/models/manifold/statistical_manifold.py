@@ -39,7 +39,7 @@ class scStatisticalManifold(Manifold):
         
         # Compute pairwise distances between subsequent points 
         dt = (curve[:, :-1] - curve[:, 1:]).pow(2).sum(dim=-1).sqrt().squeeze(1)  # b
-        kl = self._decode_and_kl(curve, self.model)
+        kl = self._decode_and_kl(curve)
         return torch.sum(kl.view(kl.shape[0], -1), dim=1) * (2 * (dt ** -1))
 
     def curve_length(self, curve: torch.Tensor):
@@ -66,7 +66,7 @@ class scStatisticalManifold(Manifold):
         """
         if len(curve.shape) == 2:
             curve = curve.unsqueeze(0)
-        kl = self._decode_and_kl(curve, self.model)
+        kl = self._decode_and_kl(curve)
         return torch.sqrt(2 * torch.sum(kl.view(kl.shape[0], -1), dim=1))
 
     def connecting_geodesic(self, 
@@ -174,4 +174,3 @@ class scStatisticalManifold(Manifold):
             kl = nb_kl(dist1, dist2)  
         
         return kl
-                              

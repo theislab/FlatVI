@@ -1,6 +1,6 @@
 seml:
-  executable: ../scCFM/train_vae.py
-  name: 1_sweep_lib_deep_geometric_eb
+  executable: ../../../../scCFM/train_seml/
+  name: 1_sweep_geom_eb
   output_dir: /nfs/homedirs/pala/scCFM/project_dir/experiments/sweep_vae_eb/logs
   conda_environment: scCFM
   project_root_dir: ../../../../scCFM
@@ -19,11 +19,11 @@ slurm:
 
 fixed: 
   # General hparameters 
-  training.task_name: 1_sweep_lib_deep_geometric_eb
+  training.task_name: 1_sweep_geom_eb
   training.seed: 42
 
   # Datamodule hyperparameters 
-  datamodule.path: /nfs/homedirs/pala/scCFM/project_dir/data/eb/processed/eb_phate.h5ad
+  datamodule.path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/eb/processed/eb_phate.h5ad
   datamodule.x_layer: X_norm
   datamodule.cond_keys: experimental_time
   datamodule.use_pca: False
@@ -82,7 +82,7 @@ fixed:
   # Logger 
   logger.offline: False
   logger.id: null # pass correct id to resume experiment!
-  logger.project: 1_sweep_lib_deep_geometric_eb
+  logger.project: 1_sweep_geom_eb
   logger.log_model: True # upload lightning ckpts
   logger.prefix: "" # a string to put at the beginning of metric keys
   logger.group: ""

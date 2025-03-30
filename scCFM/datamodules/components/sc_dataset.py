@@ -22,7 +22,7 @@ def adata_dataset(path: str,
     # Read AnnData 
     adata = sc.read_h5ad(path)
 
-    # Read labels, can be one or multiple
+    # Read labels, can be one or multiple - make it a list 
     if type(cond_keys) != list:
         cond_keys = [cond_keys]
     
@@ -43,7 +43,7 @@ def adata_dataset(path: str,
             try:
                 X = adata.layers[x_layer].A
             except:
-                 X = adata.layers[x_layer]
+                X = adata.layers[x_layer]
         elif x_layer in adata.obsm:
             X = adata.obsm[x_layer]
         else:
@@ -63,5 +63,3 @@ def load_dataset(path: str,
                             cond_keys=cond_keys, 
                             use_pca=use_pca, 
                             n_dimensions=n_dimensions)
-
-    

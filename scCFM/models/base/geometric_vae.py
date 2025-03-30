@@ -16,6 +16,8 @@ class BasicGeometricAE:
                  use_c, 
                  detach_theta, 
                  fl_weight, 
+                 latent_dim,
+                 trainable_c=False,
                  anneal_fl_weight=False, 
                  max_fl_weight=None, 
                  n_epochs_anneal_fl=None, 
@@ -49,6 +51,8 @@ class BasicGeometricAE:
         self.fl_weight = fl_weight
         self.anneal_fl_weight = anneal_fl_weight
         self.max_fl_weight = max_fl_weight
+        self.trainable_c = trainable_c
+        
         if anneal_fl_weight:
             self.fl_weight_decrease = np.abs((self.fl_weight - self.max_fl_weight)/int(fl_anneal_fraction * n_epochs_anneal_fl))
         
@@ -91,8 +95,11 @@ class BasicGeometricAE:
         """
         # Get constant scaling term 
         if self.use_c:
-            n_z = z.shape[-1]
-            c = torch.mean(1/n_z * metric_tensor.diagonal(offset=0, dim1=-1, dim2=-2).sum(-1))
+            if not self.trainable_c:
+                n_z = z.shape[-1]
+                c = torch.mean(1/n_z * metric_tensor.diagonal(offset=0, dim1=-1, dim2=-2).sum(-1))
+            else:
+                c = self.c.unsqueeze(0).unsqueeze(0).expand(z.shape[0], z.shape[1], z.shape[1])
         else:
             c = 1 
         
@@ -160,6 +167,7 @@ class GeometricNBAE(BasicGeometricAE, AE):
                  use_c, 
                  detach_theta,
                  fl_weight, 
+                 trainable_c=False,
                  anneal_fl_weight=False, 
                  max_fl_weight=None,
                  n_epochs_anneal_fl=None, 
@@ -177,6 +185,7 @@ class GeometricNBAE(BasicGeometricAE, AE):
             use_c (bool): use trace of the metric tensor on the diagonal 
             detach_theta (bool): whether to detach from the gradient of the flattening loss
         """
+        latent_dim = vae_kwargs["hidden_dims"][-1]
         BasicGeometricAE.__init__(self, 
                                     l2, 
                                     interpolate_z,
@@ -186,6 +195,8 @@ class GeometricNBAE(BasicGeometricAE, AE):
                                     use_c, 
                                     detach_theta, 
                                     fl_weight, 
+                                    latent_dim, 
+                                    trainable_c, 
                                     anneal_fl_weight, 
                                     max_fl_weight,
                                     n_epochs_anneal_fl,
@@ -193,7 +204,12 @@ class GeometricNBAE(BasicGeometricAE, AE):
         
         AE.__init__(self, **vae_kwargs)
         
+        if self.use_c and self.trainable_c:
+            self.c=torch.nn.Parameter(torch.randn(latent_dim))
+        
         assert vae_kwargs["likelihood"] == "nb" or vae_kwargs["likelihood"] == "zinb"
+        
+        self.save_hyperparameters()
 
     def step(self, batch, prefix):
         """Compute losses and log the results
@@ -269,6 +285,7 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
                  use_c, 
                  detach_theta, 
                  fl_weight, 
+                 trainable_c, 
                  anneal_fl_weight=False, 
                  max_fl_weight=None,
                  n_epochs_anneal_fl=None,
@@ -287,6 +304,7 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
             use_c (bool): use trace of the metric tensor on the diagonal 
             detach_theta (bool): whether to detach from the gradient of the flattening loss
         """
+        latent_dim = vae_kwargs["hidden_dims"][-1]
         BasicGeometricAE.__init__(self, 
                                     l2, 
                                     interpolate_z,
@@ -296,6 +314,8 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
                                     use_c, 
                                     detach_theta,
                                     fl_weight,
+                                    latent_dim,
+                                    trainable_c, 
                                     anneal_fl_weight, 
                                     max_fl_weight,
                                     n_epochs_anneal_fl,
@@ -304,6 +324,10 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
         VAE.__init__(self, **vae_kwargs)
  
         assert vae_kwargs["likelihood"] == "nb" or vae_kwargs["likelihood"] == "zinb"
+        
+        if self.use_c and self.trainable_c:
+            self.c=torch.nn.Parameter(torch.randn(latent_dim))
+        
         
     def step(self, batch, prefix):
         """Compute losses and log the results
@@ -341,7 +365,7 @@ class GeometricNBVAE(BasicGeometricAE, VAE):
             fl_weight = min([self.fl_weight, self.max_fl_weight])
         else:
             fl_weight = self.fl_weight
-                    
+                            
         # Loss function
         if self.fl_weight == 0 or self.n_epochs_so_far < self.start_jac_after:
             loss = torch.mean(recon_loss + kl_weight * kl_div)
