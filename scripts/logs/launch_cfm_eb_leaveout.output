@@ -1,4 +1,0 @@
-[2023-09-24 21:30:43,668][HYDRA] Submitit 'slurm' sweep output dir : multirun/2023-09-24/21-30-43
-[2023-09-24 21:30:43,670][HYDRA] 	#0 : model.leaveout_timepoint=1 hydra=CFM_eb_geodesic_leaveout datamodule=CFM_eb_geodesic_leaveout logger=CFM_eb_geodesic_leaveout train=CFM_eb_geodesic_leaveout
-[2023-09-24 21:30:43,676][HYDRA] 	#1 : model.leaveout_timepoint=2 hydra=CFM_eb_geodesic_leaveout datamodule=CFM_eb_geodesic_leaveout logger=CFM_eb_geodesic_leaveout train=CFM_eb_geodesic_leaveout
-[2023-09-24 21:30:43,682][HYDRA] 	#2 : model.leaveout_timepoint=3 hydra=CFM_eb_geodesic_leaveout datamodule=CFM_eb_geodesic_leaveout logger=CFM_eb_geodesic_leaveout train=CFM_eb_geodesic_leaveout

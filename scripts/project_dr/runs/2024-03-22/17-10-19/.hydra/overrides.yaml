@@ -1,9 +1,0 @@
-- checkpoint=geom_vae
-- datamodule=2_sweep_geom_hein
-- early_stopping=geom_vae
-- geometric_vae=geom_vae
-- launcher=slurm_cluster
-- model=geom_vae
-- train=2_sweep_geom_hein
-- trainer=geom_vae
-- logger=2_sweep_geom_hein

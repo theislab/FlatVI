@@ -28,4 +28,4 @@ export HYDRA_FULL_ERROR=1
 
 # python ../scCFM/train_hydra/train_cfm.pyx --multirun checkpoint=cfm datamodule=hein_cfm early_stopping=cfm hydra=cfm_hein launcher=slurm_cluster logger=cfm_hein model=eb_geodesic train=cfm_hein trainer=cfm_hein net=default 
 
-python ../scCFM/train_hydra/train_cfm.py checkpoint=eb_geodesic datamodule=eb_geodesic early_stopping=geom_vae launcher=slurm_cluster logger=eb_geodesic model=eb_geodesic train=eb_geodesic trainer=eb_geodesic net=default 
+# python ../scCFM/train_hydra/train_cfm.py checkpoint=eb_geodesic datamodule=eb_geodesic early_stopping=geom_vae launcher=slurm_cluster logger=eb_geodesic model=eb_geodesic train=eb_geodesic trainer=eb_geodesic net=default 

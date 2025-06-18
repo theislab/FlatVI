@@ -1,8 +1,0 @@
-- checkpoint=eb_geodesic
-- datamodule=eb_geodesic
-- early_stopping=geom_vae
-- launcher=slurm_cluster
-- logger=eb_geodesic
-- model=eb_geodesic
-- train=eb_geodesic
-- trainer=eb_geodesic

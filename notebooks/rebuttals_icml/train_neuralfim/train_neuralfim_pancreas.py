@@ -1,6 +1,8 @@
 import scanpy as sc
 import numpy as np
 import phate 
+import os
+import scipy as sp
 from scipy.spatial.distance import pdist, squareform
 from data import train_valid_loader_from_pc
 from model import AEDist
@@ -11,67 +13,87 @@ from transformations import LogTransform, NonTransform, StandardScaler, \
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
+from torch.utils.data import Dataset
 
+import sys 
+sys.path.insert(0, "/home/icb/alessandro.palma/environment/flatvi_baselines/phate_fim/src")
+from src.models.lit_encoder import LitAutoencoder
+
+class torch_dataset(Dataset):
+    def __init__(self, X, Y) -> None:
+        self.X = X
+        self.Y = Y
+        
+    def __len__(self):
+        return self.X.shape[0]
+
+    def __getitem__(self, index):
+        target = self.Y[index, :]
+        sample = self.X[index, :]
+        return sample, target
+    
+# Read pancreas AnnData 
 adata = sc.read_h5ad("/home/icb/alessandro.palma/environment/scCFM/project_dir/data/pancreas/processed/pancreas.h5ad")
 
-X_expression = np.array(adata.X.copy().todense())
+# Collect expression matrix 
+X_expression = np.array(adata.X.copy().todense())  # log-gexp 
 
-phate_op = phate.PHATE()
+# Initialize PHATE 
+phate_op = phate.PHATE() 
 phate_coords = phate_op.fit_transform(X_expression)
+phate_coords = sp.stats.zscore(phate_coords) 
 
-phate_D = squareform(pdist(phate_coords))
+# Initialize tensors and data loader 
+X_expression = torch.from_numpy(X_expression)
+phate_coords = torch.from_numpy(phate_coords)
+train_dataset = torch_dataset(X_expression, phate_coords)
+train_loader = torch.utils.data.DataLoader(
+    dataset=train_dataset, batch_size=256, shuffle=True)
 
-dist_std = np.std(phate_D.flatten())
+# Callable dict 
+class Args:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-trainloader, valloader, mean, std = train_valid_loader_from_pc(
-            X_expression, # <---- Pointcloud
-            phate_D, # <---- Distance matrix to match
-            batch_size=256,
-            train_valid_split=0.8,
-            shuffle=True,
-            seed=42, return_mean_std=True, componentwise_std=False)
-
-model = AEDist(
-            dim=X_expression.shape[1],
-            emb_dim=10,
-            layer_widths=[256, 128, 64],
-            activation_fn=torch.nn.ReLU(),
-            dist_reconstr_weights=[0.9, 0.1, 0.],
-            pp=NonTransform(),
-            lr=0.001,
-            weight_decay=0.0001,
-            batch_norm=True,
-            dist_recon_topk_coords=0,
-            use_dist_mse_decay=False,
-            dist_mse_decay=0.,
-            dropout=0.,
-            cycle_weight=0.,
-            cycle_dist_weight=0.,
-            mean=mean,
-            std=std,
-            dist_std=dist_std)
-
-path_dir = "/home/icb/alessandro.palma/environment/scCFM/project_dir/baselines/gaga/run"
-path_model = "/home/icb/alessandro.palma/environment/scCFM/project_dir/baselines/gaga/model"
-
-logger = TensorBoardLogger(save_dir=path_dir)
-checkpoint_callback = ModelCheckpoint(
-    dirpath=path_dir,  # Save checkpoints in wandb directory
-    filename=path_model,
-    save_top_k=1,
-    monitor='train_loss_step',  # Model selection based on validation loss
-    mode='min',  # Minimize validation loss,
-    every_n_train_steps=10000
+# Hparams 
+args = Args(
+    run_name=None,
+    dataset="tree",
+    n_obs=1600,
+    n_dim=2000,
+    batch_size=256,
+    knn=5,
+    max_epochs=100,
+    wandb=False,
+    encoder_layer=[256, 100, 10],
+    decoder_layer=[10, 100, 256],
+    activation="ReLU",
+    lr=0.0001,
+    kernel_type="phate",
+    loss_emb=False,
+    loss_dist=True,
+    loss_rec=True,
+    scale=0.0005,
+    inference=False,
+    inference_obs=1600
 )
 
-trainer = Trainer(
-    logger=logger,
-    max_epochs=20,
-    accelerator='cuda',
-    callbacks=[checkpoint_callback],
-    log_every_n_steps=100,
+# Get the dictionary of the variables 
+dict_args = vars(args)
+
+logger = WandbLogger(project="fim_phate", name=args.run_name)
+
+# Initialize trainer 
+trainer = Trainer.from_argparse_args(
+    args, accelerator="gpu", devices=1, logger=logger
 )
 
-trainer.fit(
-    model=model,
-    train_dataloaders=trainloader)
+# Embedding dimension 
+emb_dim = args.encoder_layer[-1]
+
+# Autoencoder 
+model = LitAutoencoder(input_dim=args.n_dim, emb_dim=emb_dim, **dict_args)
+trainer.fit(model, train_dataloaders=train_loader)
+
+# Save the model 
+torch.save(model.state_dict(), "/home/icb/alessandro.palma/environment/scCFM/project_dir/baselines/neuralfim/model_ckpt.pt")
