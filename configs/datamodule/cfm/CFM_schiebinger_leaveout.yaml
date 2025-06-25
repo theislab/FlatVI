@@ -1,9 +1,0 @@
-path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/schiebinger_et_al/flat/schiebinger_et_al_lib.h5ad
-x_layer: X_latents
-time_key: experimental_time
-use_pca: False
-n_dimensions: Null
-train_val_test_split: [0.70, 0.3]
-batch_size: 256
-num_workers: 2
-model_library_size: True

@@ -1,5 +1,5 @@
 filename: "epoch_{epoch:04d}"
-monitor: val/lik
+monitor: val/lik  # Monitor likelihood 
 mode: min
 save_last: True
 auto_insert_metric_name: False

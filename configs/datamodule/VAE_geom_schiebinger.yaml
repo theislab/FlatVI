@@ -1,5 +1,5 @@
-path: /home/icb/alessandro.palma/environment/scCFM/project_dir/data/eb/processed/eb_phate.h5ad
-x_layer: X_norm
+path: ../project_folder/data/schiebinger_et_al/processed/schiebinger_et_al.h5ad
+x_layer: X_counts
 cond_keys: experimental_time
 use_pca: False
 n_dimensions: Null
