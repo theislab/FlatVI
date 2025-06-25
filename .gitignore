@@ -133,3 +133,6 @@ dmypy.json
 
 # Additional folders 
 logs/
+
+# Symlink to the project folder 
+project_folder
