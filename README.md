@@ -1,4 +1,4 @@
-scCFM
+FlatVI
 =======
 
 This is the official repository for the ICML 2025 spotlight paper Enforcing Latent Euclidean Geometry in Single-Cell VAEs for Manifold Interpolation. Many tools for single-cell RNA-seq (scRNA-seq) operate under the assumption that the latent space exhibits approximate Euclidean geometry, using straight lines to estimate cell state transitions and distances. To support and enhance this assumption, we introduce FlatVI, a representation learning model for scRNA-seq data that promotes locally flat geometry in the latent space, making it a natural complement to existing single-cell analysis pipelines.
@@ -63,4 +63,36 @@ mkdir datasets
 mkdir experiments
 ```
 
-7. Run experiments.
+Repository structure
+------------
+
+> Requirements
+
+See `environment.yml` for the required packages.
+
+
+> Hydra
+
+Our implementation leverages [hydra](https://hydra.cc/docs/intro/) to handle experiments. The configuration hierarchy can be found in the `configs_hydra` folder. 
+
+> FlatVI
+
+The source folder for the model is in the `flatvi` folder. 
+
+> Training scripts
+
+Training scripts are in `flatvi/train_hydra`:
+* `tain_cfm.py` trains conditional flow matching.
+* `train_vae.py` trains the negative binomial variational autoencoder (either with or without regularization).
+* `train_geodesic_vae.py` trains the geodesic autoencoder baseline. 
+
+> Models
+
+Models scripts are in `flatvi/models` folder:
+* In `flatvi/models/base` we have standard modules for the variational autoencoder, both with and without regularization, and the geodesic autoencoder baseline.
+* In `flatvi/models/cfm` we have modules for implementing Conditional Flow Matching, inspired by the [torchCFM](https://github.com/atong01/conditional-flow-matching) repo.
+* In `flatvi/models/manifold` we have the modules to deal with operations on manififolds, such as geodesic distance approximations or metric computations.
+
+
+
+
