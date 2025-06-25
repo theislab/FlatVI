@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='scCFM',
+    name='flatvi',
     version='1.0.0',
-    author='Leon Hetzel, Alessandro Palma, Sergei Rybakov',
+    author='Alessandro Palma, Leon Hetzel, Sergei Rybakov',
     url='',
-    packages=['scCFM/']+find_packages(),
+    packages=['flatvi/']+find_packages(),
     zip_safe=False,
     include_package_data=True
 )
