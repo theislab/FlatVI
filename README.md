@@ -70,7 +70,6 @@ Repository structure
 
 See `environment.yml` for the required packages.
 
-
 > Hydra
 
 Our implementation leverages [hydra](https://hydra.cc/docs/intro/) to handle experiments. The configuration hierarchy can be found in the `configs_hydra` folder. 
@@ -82,17 +81,16 @@ The source folder for the model is in the `flatvi` folder.
 > Training scripts
 
 Training scripts are in `flatvi/train_hydra`:
-* `tain_cfm.py` trains conditional flow matching.
+* `train_cfm.py` trains conditional flow matching.
 * `train_vae.py` trains the negative binomial variational autoencoder (either with or without regularization).
 * `train_geodesic_vae.py` trains the geodesic autoencoder baseline. 
 
 > Models
 
-Models scripts are in `flatvi/models` folder:
+Model scripts are in the `flatvi/models` folder:
 * In `flatvi/models/base` we have standard modules for the variational autoencoder, both with and without regularization, and the geodesic autoencoder baseline.
 * In `flatvi/models/cfm` we have modules for implementing Conditional Flow Matching, inspired by the [torchCFM](https://github.com/atong01/conditional-flow-matching) repo.
-* In `flatvi/models/manifold` we have the modules to deal with operations on manififolds, such as geodesic distance approximations or metric computations.
-
+* In `flatvi/models/manifold` we have the modules to deal with operations on manifolds, such as geodesic distance approximations or metric computations.
 
 
 
