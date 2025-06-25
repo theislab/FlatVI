@@ -1,0 +1,16 @@
+# @package _global_
+
+# Default configurations
+defaults:
+  - _self_
+  - hydra: default
+  - datamodule: VAE_geom_eb
+  - checkpoint: geom_vae
+  - early_stopping: geom_vae
+  - logger: VAE_geom_eb
+  - model: vae_default
+  - net: null
+  - train: VAE_geom_eb.yaml
+  - trainer: VAE_default
+  - launcher: slurm_cluster
+  - geometric_vae: geom_vae

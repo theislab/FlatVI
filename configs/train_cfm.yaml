@@ -1,0 +1,16 @@
+# @package _global_
+
+# Default configurations
+defaults:
+  - _self_
+  - hydra: default
+  - datamodule: CFM_geom_eb
+  - checkpoint: cfm
+  - early_stopping: cfm
+  - logger: CFM_geom_eb
+  - model: cfm_default
+  - net: default
+  - train: CFM_geom_eb
+  - trainer: CFM_default
+  - launcher: slurm_cluster
+  - geometric_vae: null
