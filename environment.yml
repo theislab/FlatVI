@@ -1,4 +1,4 @@
-name: scCFM
+name: flatvi
 channels:
   - conda-forge
 dependencies:
