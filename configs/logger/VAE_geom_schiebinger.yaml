@@ -1,6 +1,6 @@
 offline: False
 id: null # pass correct id to resume experiment!
-project: 3_sweep_geom_schiebinger
+project: vae_schiebinger
 log_model: True # upload lightning ckpts
 prefix: "" # a string to put at the beginning of metric keys
 group: ""

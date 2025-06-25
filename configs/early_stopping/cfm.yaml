@@ -1,6 +1,6 @@
 perform_early_stopping: False
 monitor: train/loss
-patience: 50000000
+patience: 200
 mode: min
 min_delta: 0. 
 verbose: False 

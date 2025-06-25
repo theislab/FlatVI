@@ -1,5 +1,5 @@
 perform_early_stopping: False
-monitor: train/loss
+monitor: train/loss  # KL and reconstruction combination
 patience: 200
 mode: min
 min_delta: 0. 

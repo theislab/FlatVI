@@ -1,5 +1,0 @@
-run:
-  dir: ./project_dr/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
-sweeper:
-  params:
-    model.leaveout_timepoint: 1, 2, 3

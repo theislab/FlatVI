@@ -1,6 +1,5 @@
-# Geometric VAE version
 compute_metrics_every: 1
-use_c: True
+use_c: True  # Scale parameter
 trainable_c: True
 l2: True
 eta_interp: 0
