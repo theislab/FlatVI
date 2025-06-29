@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-from scCFM.models.utils import jacobian_decoder_jvp_parallel
-from scCFM.models.manifold.geometry_metrics import compute_all_metrics
-from scCFM.models.base.vae import AE, VAE
+from flatvi.models.utils import jacobian_decoder_jvp_parallel
+from flatvi.models.manifold.geometry_metrics import compute_all_metrics
+from flatvi.models.base.vae import AE, VAE
 
 class BasicGeometricAE:
     """Basic geometric autoencoder class

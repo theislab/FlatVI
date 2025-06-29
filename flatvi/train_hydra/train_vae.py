@@ -4,15 +4,14 @@ import torch
 import warnings
 
 import hydra
-from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
-sys.path.insert(0,"../")
+sys.path.insert(0,"../..")
 from paths import EXPERIMENT_FOLDER
 
-from scCFM.datamodules.sc_datamodule import scDataModule
-from scCFM.models.base.vae import VAE, AE
-from scCFM.models.base.geometric_vae import GeometricNBAE,GeometricNBVAE
+from flatvi.datamodules.sc_datamodule import scDataModule
+from flatvi.models.base.vae import VAE, AE
+from flatvi.models.base.geometric_vae import GeometricNBAE,GeometricNBVAE
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -25,7 +24,7 @@ warnings.filterwarnings(
     module="pytorch_lightning.loggers.wandb",
 )
 
-@hydra.main(config_path="../../config_hydra", config_name="train", version_base=None)
+@hydra.main(config_path="../../configs", config_name="train_vae", version_base=None)
 # Training function 
 def main(config: DictConfig):
     OmegaConf.resolve(config)
@@ -35,7 +34,6 @@ def main(config: DictConfig):
     current_experiment_dir = EXPERIMENT_FOLDER / task_name
     current_experiment_dir.mkdir(parents=True, exist_ok=True) 
 
-    
     # Initialize datamodule
     datamodule = scDataModule(path=config.datamodule.path,
                                 x_layer=config.datamodule.x_layer,
@@ -185,3 +183,4 @@ def main(config: DictConfig):
 
 if __name__=="__main__":
     main()
+    

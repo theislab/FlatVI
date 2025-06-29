@@ -1,24 +1,22 @@
 import sys 
-import pytorch_lightning as pl
-import torch
 import warnings
 
 import hydra
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
-sys.path.insert(0,"../")
+sys.path.insert(0,"../..")
 from paths import EXPERIMENT_FOLDER
 
-from scCFM.datamodules.time_sc_datamodule import TrajectoryDataModule
-from scCFM.models.cfm.cfm_module import CFMLitModule
-from scCFM.models.cfm.components.mlp import MLP
+from flatvi.datamodules.time_sc_datamodule import TrajectoryDataModule
+from flatvi.models.cfm.cfm_module import CFMLitModule
+from flatvi.models.cfm.components.mlp import MLP
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 
-from scCFM.train_hydra.utils.exceptions import *
+from flatvi.train_hydra.utils.exceptions import *
  
 # Filter out torch warnings 
 warnings.filterwarnings(
@@ -27,7 +25,7 @@ warnings.filterwarnings(
     module="pytorch_lightning.loggers.wandb",
 )
 
-@hydra.main(config_path="../../config_hydra", config_name="train", version_base=None)
+@hydra.main(config_path="../../configs", config_name="train_cfm", version_base=None)
 @print_exceptions
 def main(config: DictConfig):
     # Resolve interpolations to work around a bug:

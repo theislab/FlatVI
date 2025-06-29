@@ -6,9 +6,9 @@ from torch.distributions import kl_divergence
 from stochman.manifold import Manifold
 from stochman.curves import BasicCurve, CubicSpline
 
-from scCFM.models.manifold.geodesic import sc_geodesic_minimizing_energy
-from scCFM.models.utils import get_distribution
-from scCFM.models.manifold.utils import nb_kl
+from flatvi.models.manifold.geodesic import sc_geodesic_minimizing_energy
+from flatvi.models.utils import get_distribution
+from flatvi.models.manifold.utils import nb_kl
 
 
 class scStatisticalManifold(Manifold):

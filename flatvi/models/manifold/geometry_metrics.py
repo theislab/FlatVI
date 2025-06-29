@@ -1,6 +1,6 @@
 import torch 
-from scCFM.models.utils import get_distribution
-from scCFM.models.manifold.utils import nb_kl
+from flatvi.models.utils import get_distribution
+from flatvi.models.manifold.utils import nb_kl
 # from torchmetrics import PearsonCorrCoef, SpearmanCorrCoef
 
 # corrcoef = SpearmanCorrCoef()

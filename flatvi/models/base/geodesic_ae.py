@@ -4,8 +4,8 @@ from scipy.sparse import csr_matrix
 import numpy as np
 import torch
 import torch.nn as nn
-from scCFM.models.base.mlp import MLP
-from scCFM.models.base.vae import AE
+from flatvi.models.base.mlp import MLP
+from flatvi.models.base.vae import AE
 
 class DiffusionDistance:
     """

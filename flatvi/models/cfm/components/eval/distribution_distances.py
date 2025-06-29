@@ -4,9 +4,8 @@ from typing import Union
 import numpy as np
 import torch
 
-from scCFM.models.cfm.components.eval.mmd import linear_mmd2, mix_rbf_mmd2, poly_mmd2
-from scCFM.models.cfm.components.optimal_transport import wasserstein
-
+from flatvi.models.cfm.components.eval.mmd import linear_mmd2, mix_rbf_mmd2, poly_mmd2
+from flatvi.models.cfm.components.optimal_transport import wasserstein
 
 def compute_distances(pred, true):
     """computes distances between vectors."""

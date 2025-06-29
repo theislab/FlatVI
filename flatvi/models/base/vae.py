@@ -6,8 +6,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import pytorch_lightning as pl
 
-from scCFM.models.base.mlp import MLP
-from scCFM.models.utils import get_distribution
+from flatvi.models.base.mlp import MLP
+from flatvi.models.utils import get_distribution
 
 
 class BaseAutoencoder(pl.LightningModule):

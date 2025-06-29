@@ -6,9 +6,9 @@ from pytorch_lightning import LightningDataModule, LightningModule
 from torchdyn.core import NeuralODE
 from torch.optim import Adam
 
-from scCFM.models.cfm.components.eval.distribution_distances import compute_distribution_distances
-from scCFM.models.cfm.components.optimal_transport import OTPlanSampler
-from scCFM.models.utils import pad_t_like_x, torch_wrapper
+from flatvi.models.cfm.components.eval.distribution_distances import compute_distribution_distances
+from flatvi.models.cfm.components.optimal_transport import OTPlanSampler
+from flatvi.models.utils import pad_t_like_x, torch_wrapper
 
 class CFMLitModule(LightningModule):
     """Conditional Flow Matching Module for training generative models and models over time."""

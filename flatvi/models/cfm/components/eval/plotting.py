@@ -7,7 +7,6 @@ import torch
 
 from torchdyn.core import NeuralODE
 
-
 def store_trajectories(obs: Union[torch.Tensor, list], model, title="trajs", start_time=0):
     n = 2000
     if isinstance(obs, list):

@@ -2,25 +2,12 @@ import torch
 
 min_var_est = 1e-8
 
-
-# Consider linear time MMD with a linear kernel:
-# K(f(x), f(y)) = f(x)^Tf(y)
-# h(z_i, z_j) = k(x_i, x_j) + k(y_i, y_j) - k(x_i, y_j) - k(x_j, y_i)
-#             = [f(x_i) - f(y_i)]^T[f(x_j) - f(y_j)]
-#
-# f_of_X: batch_size * k
-# f_of_Y: batch_size * k
 def linear_mmd2(f_of_X, f_of_Y):
     loss = 0.0
     delta = f_of_X - f_of_Y
     loss = torch.mean((delta[:-1] * delta[1:]).sum(1))
     return loss
 
-
-# Consider linear time MMD with a polynomial kernel:
-# K(f(x), f(y)) = (alpha*f(x)^Tf(y) + c)^d
-# f_of_X: batch_size * k
-# f_of_Y: batch_size * k
 def poly_mmd2(f_of_X, f_of_Y, d=2, alpha=1.0, c=2.0):
     K_XX = alpha * (f_of_X[:-1] * f_of_X[1:]).sum(1) + c
     K_XX_mean = torch.mean(K_XX.pow(d))
@@ -35,7 +22,6 @@ def poly_mmd2(f_of_X, f_of_Y, d=2, alpha=1.0, c=2.0):
     K_YX_mean = torch.mean(K_YX.pow(d))
 
     return K_XX_mean + K_YY_mean - K_XY_mean - K_YX_mean
-
 
 def _mix_rbf_kernel(X, Y, sigma_list):
     assert X.size(0) == Y.size(0)
