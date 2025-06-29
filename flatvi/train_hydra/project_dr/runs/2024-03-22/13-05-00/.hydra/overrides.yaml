@@ -1,9 +1,0 @@
-- checkpoint=default
-- datamodule=eb_flat_vae
-- early_stopping=default
-- geometric_vae=1_sweep_geom_eb
-- hydra=default
-- launcher=slurm_cluster
-- model=1_sweep_geom_eb
-- train=1_sweep_geom_eb
-- trainer=1_sweep_geom_eb
