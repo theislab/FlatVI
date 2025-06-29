@@ -6,7 +6,7 @@ defaults:
   - hydra: default
   - datamodule: CFM_geom_eb
   - checkpoint: cfm
-  - early_stopping: cfm
+  - early_stopping: default
   - logger: CFM_geom_eb
   - model: cfm_default
   - net: default

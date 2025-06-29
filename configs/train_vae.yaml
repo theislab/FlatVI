@@ -6,7 +6,7 @@ defaults:
   - hydra: default
   - datamodule: VAE_geom_eb
   - checkpoint: geom_vae
-  - early_stopping: geom_vae
+  - early_stopping: default
   - logger: VAE_geom_eb
   - model: vae_default
   - net: null
