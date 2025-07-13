@@ -26,7 +26,7 @@ export HYDRA_FULL_ERROR=1
 cd ../flatvi/train_hydra/
 
 # Embryoid body dataset
-python ../scCFM/train_hydra/train_vae.py \
+python train_vae.py \
 checkpoint=geom_vae \
 datamodule=VAE_geom_eb \
 logger=VAE_geom_eb \
@@ -35,7 +35,7 @@ train=VAE_geom_eb \
 trainer=VAE_default \
 
 # Pancreas dataset
-# python ../scCFM/train_hydra/train_vae.py \
+# python train_vae.py \
 # checkpoint=geom_vae \
 # datamodule=CFM_geom_pancreas \
 # logger=CFM_geom_pancreas \
@@ -44,7 +44,7 @@ trainer=VAE_default \
 # trainer=VAE_default \
 
 # MEF dataset
-# python ../scCFM/train_hydra/train_vae.py \
+# python train_vae.py \
 # checkpoint=geom_vae \
 # datamodule=VAE_geom_schiebinger \
 # logger=VAE_geom_schiebinger \

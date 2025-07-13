@@ -1,7 +1,7 @@
 import os 
 
 import numpy as np
-from scCFM.datamodules.components.sc_dataset import load_dataset
+from flatvi.datamodules.components.sc_dataset import load_dataset
 from typing import Optional, List
 
 import torch
