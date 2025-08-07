@@ -1,4 +1,4 @@
-path: ../project_folder/data/eb/processed/eb_phate.h5ad
+path: ../../project_folder/data/eb/processed/eb_phate.h5ad
 x_layer: X_counts
 cond_keys: experimental_time
 use_pca: False

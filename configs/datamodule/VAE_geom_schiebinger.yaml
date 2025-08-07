@@ -1,4 +1,4 @@
-path: ../project_folder/data/schiebinger_et_al/processed/schiebinger_et_al.h5ad
+path: ../../project_folder/data/schiebinger_et_al/processed/schiebinger_et_al.h5ad
 x_layer: X_counts
 cond_keys: experimental_time
 use_pca: False
