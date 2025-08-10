@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH -o ./logs/train_flatvi.output
+#SBATCH -o ./logs/train_flatvi_mef.output
 
-#SBATCH -e ./logs/train_flatvi.error
+#SBATCH -e ./logs/train_flatvi_mef.error
 
-#SBATCH -J train_flatvi
+#SBATCH -J train_flatvi_mef
 
 #SBATCH -p gpu_p
 
@@ -26,13 +26,13 @@ export HYDRA_FULL_ERROR=1
 cd ../flatvi/train_hydra/
 
 # Embryoid body dataset
-python train_vae.py \
-checkpoint=geom_vae \
-datamodule=VAE_geom_eb \
-logger=VAE_geom_eb \
-model=vae_default \
-train=VAE_geom_eb \
-trainer=VAE_default \
+# python train_vae.py \
+# checkpoint=geom_vae \
+# datamodule=VAE_geom_eb \
+# logger=VAE_geom_eb \
+# model=vae_default \
+# train=VAE_geom_eb \
+# trainer=VAE_default \
 
 # Pancreas dataset
 # python train_vae.py \
@@ -44,10 +44,10 @@ trainer=VAE_default \
 # trainer=VAE_default \
 
 # MEF dataset
-# python train_vae.py \
-# checkpoint=geom_vae \
-# datamodule=VAE_geom_schiebinger \
-# logger=VAE_geom_schiebinger \
-# model=vae_default \
-# train=VAE_geom_schiebinger \
-# trainer=VAE_default \
+python train_vae.py \
+checkpoint=geom_vae \
+datamodule=VAE_geom_schiebinger \
+logger=VAE_geom_schiebinger \
+model=vae_default \
+train=VAE_geom_schiebinger \
+trainer=VAE_default \
