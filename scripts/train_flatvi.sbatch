@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH -o ./logs/train_flatvi_mef.output
+#SBATCH -o ./logs/train_flatvi.output
 
-#SBATCH -e ./logs/train_flatvi_mef.error
+#SBATCH -e ./logs/train_flatvi.error
 
-#SBATCH -J train_flatvi_mef
+#SBATCH -J train_flatvi
 
 #SBATCH -p gpu_p
 
@@ -32,7 +32,7 @@ cd ../flatvi/train_hydra/
 # logger=VAE_geom_eb \
 # model=vae_default \
 # train=VAE_geom_eb \
-# trainer=VAE_default \
+# trainer=VAE_default 
 
 # Pancreas dataset
 # python train_vae.py \
@@ -41,7 +41,7 @@ cd ../flatvi/train_hydra/
 # logger=CFM_geom_pancreas \
 # model=vae_default \
 # train=VAE_geom_pancreas \
-# trainer=VAE_default \
+# trainer=VAE_default 
 
 # MEF dataset
 python train_vae.py \
@@ -50,4 +50,4 @@ datamodule=VAE_geom_schiebinger \
 logger=VAE_geom_schiebinger \
 model=vae_default \
 train=VAE_geom_schiebinger \
-trainer=VAE_default \
+trainer=VAE_default 

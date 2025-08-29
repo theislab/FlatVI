@@ -1,8 +1,8 @@
-path: ../../project_folder/data/eb/processed/pancreas.h5ad
+path: ../../project_folder/data/pancreas/processed/pancreas.h5ad
 x_layer: X_counts
 cond_keys: experimental_time
 use_pca: False
 n_dimensions: Null
 train_val_test_split: [0.80, 0.2]
 batch_size: 32
-num_workers: 2
+num_workers
