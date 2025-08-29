@@ -1,5 +1,0 @@
-filename: "epoch_{epoch:04d}"
-monitor: val/loss  # Monitor FM loss  
-mode: min
-save_last: True
-auto_insert_metric_name: False
